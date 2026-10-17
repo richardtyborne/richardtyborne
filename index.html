@@ -3,159 +3,285 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Sukkasimulaattori</title>
+<meta name="description" content="Suunnittele villasukat: säädä koko, lanka ja rakenne, katso sukka 3D:nä ja saat valmiin ohjeen, silmukkamäärät ja lankamenekin.">
+<meta property="og:title" content="Sukkasimulaattori">
+<meta property="og:description" content="Suunnittele villasukat 3D:nä ja saat valmiin neuleohjeen, silmukkamäärät ja lankamenekin.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://richardtyborne.github.io/richardtyborne/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#F5F2ED" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#11100F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sukat">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23B0263F'/%3E%3Cpath d='M23 11h17v20l9 8.6a9 9 0 0 1-12.4 13L25.5 42.3A9 9 0 0 1 23 36z' fill='%23fff'/%3E%3Cpath d='M23 19h17' stroke='%23B0263F' stroke-width='3'/%3E%3C/svg%3E">
+<script>try{ var th=localStorage.getItem('sukkasimulaattori-v2-theme'); if(th==='light'||th==='dark') document.documentElement.dataset.theme=th; }catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Sono:wght@400;500;600&family=Young+Serif&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,0..100&family=Geist:wght@400..700&display=swap">
 <style>
-/* Layout: säätöpaneeli vasemmalla (oma vieritys) + näyttämö oikealla: sukka 2D/3D, tunnusluvut, välilehdet (ohje, silmukat, lanka, puikot, korvaava lanka). Kapealla näytöllä sukka ensin. */
+/* Layout: leveällä näytöllä säädöt vasemmalla (oma vieritys) ja oikealla sukka 2D/3D, tunnusluvut ja välilehdet.
+   Puhelimessa sovellusmainen näkymä: alapalkki (Suunnittele / Ohje / Laskelmat), sukka pysyy ylhäällä säätöjä muutettaessa. */
 :root{
-  --bg:#ECEFF0; --surface:#FFFFFF; --surface-2:#E1E6E8; --stage:#DCE3E5;
-  --ink:#162028; --muted:#56646C; --line:#C8D1D5;
-  --accent:#A8243B; --accent-soft:#F3DCE0; --on-accent:#FFFFFF;
-  --ok:#2B7550; --ok-soft:#DCEFE4; --warn:#8A5F00; --warn-soft:#F6EACB; --focus:#2D6BD8;
-  --f-display:"Young Serif", Georgia, "Times New Roman", serif;
-  --f-ui:"Familjen Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-num:"Sono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bg:#F5F2ED; --surface:#FFFFFF; --surface-2:#EFEBE4; --surface-3:#E5DFD6; --raised:#FFFFFF;
+  --stage-a:#FCFBF8; --stage-b:#E7E1D7;
+  --ink:#1D1B18; --muted:#6C655C; --line:#E7E2D9; --line-strong:#D2CBC0;
+  --accent:#B0263F; --accent-soft:#F8E4E7; --on-accent:#FFFFFF;
+  --ok:#2F7A52; --on-ok:#FFFFFF; --ok-soft:#E2F2E8; --warn:#8A5A00; --warn-soft:#FBF0D5; --focus:#2D6BD8;
+  --glass:rgba(255,253,250,.74); --glass-line:rgba(29,27,24,.09);
+  --shadow-sm:0 1px 2px rgba(45,32,20,.05),0 0 0 1px rgba(45,32,20,.045);
+  --shadow-md:0 1px 2px rgba(45,32,20,.04),0 14px 36px -14px rgba(45,32,20,.22),0 0 0 1px rgba(45,32,20,.05);
+  --r-card:22px; --r-ctl:12px;
+  --gl:max(20px,env(safe-area-inset-left,0px)); --gr:max(20px,env(safe-area-inset-right,0px));
+  --f-display:"Fraunces", Georgia, "Times New Roman", serif;
+  --f-ui:"Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-num:"Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0F151A; --surface:#172027; --surface-2:#1F2A32; --stage:#141E24;
-    --ink:#E4EAEC; --muted:#93A2AA; --line:#2B3841;
-    --accent:#E8657A; --accent-soft:#3A1E25; --on-accent:#1A0B0F;
-    --ok:#6CC497; --ok-soft:#17332A; --warn:#E6B85C; --warn-soft:#3A2E12; --focus:#7FA8FF;
+    --bg:#11100F; --surface:#1B1917; --surface-2:#262320; --surface-3:#302C28; --raised:#3A3530;
+    --stage-a:#2B2723; --stage-b:#141211;
+    --ink:#F2EDE7; --muted:#A39B91; --line:#2D2926; --line-strong:#3D3833;
+    --accent:#F27088; --accent-soft:#3B1E25; --on-accent:#1A0B0F;
+    --ok:#6CC497; --on-ok:#0E2318; --ok-soft:#16302A; --warn:#E6B85C; --warn-soft:#352A12; --focus:#7FA8FF;
+    --glass:rgba(30,28,26,.72); --glass-line:rgba(255,255,255,.09);
+    --shadow-sm:0 0 0 1px rgba(255,255,255,.05);
+    --shadow-md:0 0 0 1px rgba(255,255,255,.06),0 18px 40px -16px rgba(0,0,0,.7);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0F151A; --surface:#172027; --surface-2:#1F2A32; --stage:#141E24;
-  --ink:#E4EAEC; --muted:#93A2AA; --line:#2B3841;
-  --accent:#E8657A; --accent-soft:#3A1E25; --on-accent:#1A0B0F;
-  --ok:#6CC497; --ok-soft:#17332A; --warn:#E6B85C; --warn-soft:#3A2E12; --focus:#7FA8FF;
+  --bg:#11100F; --surface:#1B1917; --surface-2:#262320; --surface-3:#302C28; --raised:#3A3530;
+  --stage-a:#2B2723; --stage-b:#141211;
+  --ink:#F2EDE7; --muted:#A39B91; --line:#2D2926; --line-strong:#3D3833;
+  --accent:#F27088; --accent-soft:#3B1E25; --on-accent:#1A0B0F;
+  --ok:#6CC497; --on-ok:#0E2318; --ok-soft:#16302A; --warn:#E6B85C; --warn-soft:#352A12; --focus:#7FA8FF;
+  --glass:rgba(30,28,26,.72); --glass-line:rgba(255,255,255,.09);
+  --shadow-sm:0 0 0 1px rgba(255,255,255,.05);
+  --shadow-md:0 0 0 1px rgba(255,255,255,.06),0 18px 40px -16px rgba(0,0,0,.7);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
-.wrap{max-width:1480px;margin:0 auto;padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 24px;margin-bottom:18px}
-.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,4.2vw,44px);line-height:1.02;margin:2px 0 0;letter-spacing:-.01em;text-wrap:balance}
-.lede{color:var(--muted);max-width:62ch;margin:0}
-.layout{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:20px;align-items:start}
-.controls{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px));overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;overscroll-behavior:contain}
-.stage{display:flex;flex-direction:column;gap:16px;min-width:0}
-@media (max-width:980px){
-  .layout{grid-template-columns:minmax(0,1fr)}
-  .controls{position:static;max-height:none;overflow:visible;order:2}
-  .stage{order:1}
-}
-/* --- säätöpaneeli --- */
-details.sec{border-bottom:1px solid var(--line)}
-details.sec:last-child{border-bottom:0}
-details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;font-weight:600;font-size:14px;letter-spacing:.02em}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:var(--accent);text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.wrap{max-width:1480px;margin:0 auto;padding:24px var(--gr) 64px var(--gl)}
+
+/* --- yläpalkki --- */
+.top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand lede theme";align-items:center;gap:12px 28px;margin-bottom:22px}
+.brand{grid-area:brand;display:flex;align-items:center;gap:14px;min-width:0}
+.logo{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;flex:none;background:var(--accent);color:var(--on-accent);box-shadow:0 6px 18px -6px color-mix(in srgb,var(--accent) 70%,transparent)}
+.logo .ic{width:26px;height:26px;stroke-width:1.9}
+.eyebrow{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--f-display);font-weight:500;font-variation-settings:"SOFT" 60;font-size:clamp(27px,3.4vw,40px);line-height:1.05;margin:2px 0 0;letter-spacing:-.025em}
+.lede{grid-area:lede;justify-self:end;color:var(--muted);max-width:60ch;margin:0;font-size:14.5px;text-wrap:pretty}
+#themeBtn{grid-area:theme}
+.iconbtn{width:42px;height:42px;border-radius:999px;display:inline-grid;place-items:center;border:0;padding:0;color:var(--ink);background:var(--surface);box-shadow:var(--shadow-sm);cursor:pointer;transition:background-color .15s,color .15s,transform .1s;flex:none}
+.iconbtn:active{transform:scale(.94)}
+label.iconbtn:has(input:checked){background:var(--ink);color:var(--surface)}
+label.iconbtn:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:2px}
+
+/* --- asettelu --- */
+.layout{display:grid;grid-template-columns:minmax(330px,400px) minmax(0,1fr);grid-template-rows:auto auto auto 1fr;grid-template-areas:"ctrl view" "ctrl sum" "ctrl panel" "ctrl foot";gap:18px 24px;align-items:start}
+.viewcard{grid-area:view}
+.summary{grid-area:sum;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel{grid-area:panel}
+.foot{grid-area:foot}
+.controls{grid-area:ctrl;position:sticky;top:16px;max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:10px;padding:2px 8px 20px 2px;margin:-2px -8px 0 -2px;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+.ctl-title{display:none;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin:8px 4px 2px}
+.tabbar{display:none}
+
+/* --- säätöosiot --- */
+details.sec{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow-sm);flex:none}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 16px;min-height:62px;border-radius:var(--r-card);user-select:none;-webkit-user-select:none}
 details.sec>summary::-webkit-details-marker{display:none}
-details.sec>summary .hint{font-weight:400;color:var(--muted);font-size:13px;font-family:var(--f-num)}
-details.sec>summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .15s;flex:none}
-details.sec[open]>summary::after{transform:rotate(-135deg) translateY(-2px)}
-.sec-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
-.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
-.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+details.sec>summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s;flex:none;margin-right:4px}
+details.sec[open]>summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
+.sec-ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent)}
+.sec-ic .ic{width:19px;height:19px}
+.sec-tx{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.sec-tx b{font-weight:600;font-size:15px}
+.hint{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;display:flex;align-items:center;gap:6px}
+.hint .dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.hint .dot+.dot{margin-left:-9px;outline:2px solid var(--surface)}
+.sec-body{padding:2px 16px 18px;display:flex;flex-direction:column;gap:14px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
 .f.wide{grid-column:1/-1}
-.f>label,.lbl{font-size:12.5px;color:var(--muted);font-weight:500}
-input[type=number],input[type=text],input[type=url],select{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:38px}
-input[type=number]{font-family:var(--f-num);font-size:13.5px}
-input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.f>label,.lbl{font-size:12.5px;color:var(--muted);font-weight:500;line-height:1.3}
+input[type=number],input[type=text],input[type=url],select{width:100%;font:inherit;font-size:15px;color:var(--ink);background-color:var(--surface-2);border:1px solid transparent;border-radius:var(--r-ctl);padding:9px 12px;min-height:44px;transition:border-color .15s,background-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+input[type=number]{font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input::placeholder{color:var(--muted);opacity:.7}
+select{padding-right:34px;text-overflow:ellipsis;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238B847A' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:15px}
+input[type=number]:focus,input[type=text]:focus,input[type=url]:focus,select:focus{outline:none;background-color:var(--surface);border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
 .unit{position:relative}
 .unit input{padding-right:42px}
-.unit span{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);pointer-events:none;font-family:var(--f-num)}
-.check{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
-.check input{width:18px;height:18px;accent-color:var(--accent)}
-.help{font-size:12.5px;color:var(--muted);margin:0}
-.seg{display:inline-flex;flex-wrap:wrap;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
-.seg button{font:inherit;font-size:13.5px;border:0;background:transparent;color:var(--ink);padding:6px 12px;border-radius:6px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.btn{font:inherit;font-size:13.5px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{border-color:var(--muted)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.btn.ghost{background:transparent}
-.btn.small{font-size:12.5px;padding:5px 9px}
+.unit span{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12.5px;color:var(--muted);pointer-events:none}
+/* +/- -painikkeet */
+.stepper{display:flex;align-items:center;background:var(--surface-2);border-radius:var(--r-ctl);border:1px solid transparent;transition:border-color .15s,box-shadow .15s,background-color .15s}
+.stepper:focus-within{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
+.stepper input,.stepper input:hover,.stepper input:focus{background:transparent;border:0;box-shadow:none;padding:0 2px 0 0;text-align:right;min-width:0;flex:1}
+.stepper span{position:static;transform:none;padding:0 2px 0 3px;white-space:nowrap}
+.stepper .step{flex:none;width:36px;height:42px;border:0;background:none;color:var(--ink);font:inherit;font-size:20px;line-height:1;cursor:pointer;border-radius:10px;display:grid;place-items:center;touch-action:manipulation}
+.stepper .step:active{background:var(--surface-3)}
+/* kytkin */
+.check{display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;gap:12px;font-size:15px;cursor:pointer;min-height:44px}
+.check input{-webkit-appearance:none;appearance:none;width:46px;height:28px;border-radius:999px;background:var(--line-strong);position:relative;flex:none;margin:0;cursor:pointer;transition:background-color .2s}
+.check input::before{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.28);transition:transform .22s cubic-bezier(.3,.7,.4,1.2)}
+.check input:checked{background:var(--accent)}
+.check input:checked::before{transform:translateX(18px)}
+.help{font-size:13px;color:var(--muted);margin:0;line-height:1.45}
+details>summary.help{list-style:none;color:var(--accent);font-weight:500}
+details>summary.help::-webkit-details-marker{display:none}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:13px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:14px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:0 15px;min-height:38px;border-radius:10px;cursor:pointer;transition:background-color .15s,color .15s,box-shadow .15s;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--raised);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 2px 8px -2px rgba(0,0,0,.12)}
+.seg button[disabled]{opacity:.45;cursor:default}
+.f .seg{display:flex}
+.f .seg button{flex:1}
+.btn{font:inherit;font-size:14px;font-weight:600;border:0;background:var(--surface-2);color:var(--ink);padding:0 16px;min-height:40px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:background-color .15s,transform .1s;text-decoration:none;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn .ic{width:17px;height:17px}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.on{background:var(--ok-soft);color:var(--ok)}
+.btn.small{font-size:13px;min-height:34px;padding:0 13px}
 .btn[disabled]{opacity:.55;cursor:default}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 /* --- langat --- */
-.yarn{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.yarn>summary{list-style:none;cursor:pointer;display:flex;gap:10px;align-items:center;padding:10px 12px}
+.yarn{border:1px solid var(--line);border-radius:16px;background:var(--surface);transition:box-shadow .2s}
+.yarn[open]{box-shadow:var(--shadow-md);border-color:transparent}
+.yarn>summary{list-style:none;cursor:pointer;display:flex;gap:12px;align-items:center;padding:11px 12px;min-height:60px}
 .yarn>summary::-webkit-details-marker{display:none}
-.swatch{width:26px;height:26px;border-radius:50%;flex:none;border:1px solid var(--line);box-shadow:inset 0 0 0 3px color-mix(in srgb, #000 8%, transparent)}
-.yarn .nm{font-weight:600;font-size:14px;line-height:1.2;min-width:0}
-.yarn .nm small{display:block;font-weight:400;color:var(--muted);font-size:12px;font-family:var(--f-num)}
-.yarn .tags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.tag{font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:var(--surface-2);color:var(--muted);font-weight:600;white-space:nowrap}
-.yarn-body{padding:4px 12px 12px;display:flex;flex-direction:column;gap:10px;border-top:1px dashed var(--line)}
-.status{font-size:12.5px;color:var(--muted);min-height:1em}
+.swatch{width:34px;height:34px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),inset 0 -4px 8px rgba(0,0,0,.14),inset 0 3px 6px rgba(255,255,255,.25)}
+.yarn .nm{font-weight:600;font-size:14.5px;line-height:1.25;min-width:0}
+.yarn .nm small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;margin-top:2px}
+.yarn .tags{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:46%}
+.tag{font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-weight:600;white-space:nowrap}
+.yarn-body{padding:12px 12px 14px;display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line)}
+.status{font-size:13px;color:var(--muted);min-height:1em}
+.status:empty{display:none}
 .status.ok{color:var(--ok)}
 .status.warn{color:var(--warn)}
-.palette{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-input[type=color]{width:38px;height:32px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer}
-.linkout{font-size:12.5px;color:var(--accent);word-break:break-all}
-/* --- näyttämö --- */
-.viewcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.viewbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
-.view{position:relative;height:clamp(320px,56vh,600px);background:var(--stage);touch-action:none}
-.view canvas{display:block;width:100%;height:100%;cursor:grab}
+.palette{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=color]{-webkit-appearance:none;appearance:none;width:38px;height:38px;padding:0;border:3px solid var(--surface);border-radius:50%;background:none;cursor:pointer;box-shadow:0 0 0 1px var(--line-strong)}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+input[type=color]::-webkit-color-swatch{border:0;border-radius:50%}
+input[type=color]::-moz-color-swatch{border:0;border-radius:50%}
+.palette .unit{width:110px}
+.linkout{font-size:13px;color:var(--accent);word-break:break-word}
+/* --- raitajakso --- */
+.bands{display:flex;flex-direction:column;gap:8px}
+.band{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:16px;background:var(--surface-2)}
+.band-top{display:flex;gap:8px;align-items:center}
+.band-top select{flex:1;min-width:0}
+.band-bot{display:grid;grid-template-columns:minmax(0,1fr) 76px 76px;gap:8px}
+.band input,.band select{background-color:var(--surface)}
+.band .unit input{padding-right:38px;padding-left:10px}
+.band .unit span{right:9px;font-size:12px}
+.band .bn{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center;min-width:52px;font-variant-numeric:tabular-nums;font-weight:600}
+.band .bn i{width:14px;height:14px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.band .d{border:0;background:none;color:var(--muted);font-size:22px;cursor:pointer;width:40px;height:40px;border-radius:999px;line-height:1;flex:none}
+.chartwrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.chartwrap svg{max-width:100%;height:auto;border-radius:4px}
+.chartcap{font-size:12.5px;color:var(--muted);max-width:32ch;margin:0}
+.chartnum{fill:var(--muted);font-family:var(--f-num);font-size:8px}
+
+/* --- esikatselu --- */
+.viewcard{position:relative;border-radius:var(--r-card);overflow:hidden;background:radial-gradient(130% 100% at 50% 28%,var(--stage-a),var(--stage-b));box-shadow:var(--shadow-sm)}
+.view{position:relative;height:clamp(380px,60vh,660px)}
+.view canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
 .view canvas:active{cursor:grabbing}
 .view svg{width:100%;height:100%;display:block}
-.viewnote{position:absolute;right:calc(10px + env(safe-area-inset-right,0px));top:10px;max-width:60%;text-align:right;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--surface) 80%,transparent);padding:3px 8px;border-radius:6px;pointer-events:none}
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.legend i{flex:none;width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
-.stats{display:flex;flex-wrap:wrap;gap:1px;margin:0;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.stat{flex:1 1 150px;background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.stat dt{font-size:12px;color:var(--muted);letter-spacing:.03em}
-.stat dd{margin:0;font-family:var(--f-num);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2}
-.stat dd small{font-size:12px;color:var(--muted);font-weight:400}
-.notes{display:flex;flex-direction:column;gap:6px}
-.note{font-size:13.5px;padding:8px 12px;border-radius:8px;background:var(--warn-soft);color:var(--ink);border-left:3px solid var(--warn)}
-.note.info{background:var(--surface-2);border-left-color:var(--muted)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px}
-.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);padding:0 8px}
-.tabs button{font:inherit;font-size:14px;font-weight:600;background:none;border:0;color:var(--muted);padding:12px 10px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
-.tabpanel{padding:18px 20px 22px}
-.tabpanel h3{font-family:var(--f-display);font-weight:400;font-size:20px;margin:18px 0 6px;text-wrap:balance}
+#v2dWrap{padding:60px 12px 12px}
+.viewtools{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;z-index:2}
+.viewtools>*{pointer-events:auto}
+.glass{background:var(--glass)!important;-webkit-backdrop-filter:blur(18px) saturate(1.7);backdrop-filter:blur(18px) saturate(1.7);box-shadow:0 0 0 1px var(--glass-line),0 6px 20px -8px rgba(0,0,0,.18)}
+label.iconbtn.glass:has(input:checked){background:var(--ink)!important;color:var(--surface)}
+.viewnote{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:12.5px;color:var(--muted);padding:6px 14px;border-radius:999px;pointer-events:none;text-align:center;width:max-content;max-width:calc(100% - 28px);transition:opacity .4s}
+.view.used .viewnote{opacity:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.legend span{display:inline-flex;align-items:center;gap:8px;font-size:13px;background:var(--surface);padding:5px 12px 5px 5px;border-radius:999px;box-shadow:var(--shadow-sm);max-width:100%;min-width:0}
+.legend i{width:22px;height:22px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1),inset 0 -3px 6px rgba(0,0,0,.14)}
+.legend b{font-weight:600;white-space:nowrap;flex:none}
+.legend em{font-style:normal;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0}
+.stat{background:var(--surface);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:3px;min-width:0}
+.stat dt{font-size:12.5px;color:var(--muted);font-weight:500}
+.stat dd{margin:0;font-family:var(--f-num);font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.15;white-space:nowrap}
+.stat dd small{display:block;font-size:12px;color:var(--muted);font-weight:450;letter-spacing:0;margin-top:3px;white-space:normal}
+.notes{display:flex;flex-direction:column;gap:8px}
+.note{font-size:14px;padding:12px 14px 12px 44px;border-radius:16px;background:var(--warn-soft);color:var(--ink);position:relative;line-height:1.45}
+.note::before{content:"";position:absolute;left:15px;top:13px;width:18px;height:18px;background:var(--warn);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9L2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'/%3E%3Cpath d='M12 9.5v4M12 17h.01'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9L2.4 17.5A2 2 0 0 0 4.1 20.5h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'/%3E%3Cpath d='M12 9.5v4M12 17h.01'/%3E%3C/svg%3E") center/contain no-repeat}
+
+/* --- tulokset --- */
+.panel{background:var(--surface);border-radius:var(--r-card);box-shadow:var(--shadow-sm);min-width:0}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:10px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{font:inherit;font-size:14px;font-weight:600;background:none;border:0;color:var(--muted);padding:0 15px;min-height:38px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background-color .15s,color .15s}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+.tabpanel{padding:20px 24px 28px}
+.tabpanel h3{font-family:var(--f-display);font-weight:500;font-variation-settings:"SOFT" 60;font-size:21px;letter-spacing:-.015em;line-height:1.2;margin:30px 0 10px;text-wrap:balance}
 .tabpanel h3:first-child{margin-top:0}
 .tabpanel p{max-width:72ch}
-ol.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;max-width:78ch}
-ul.steps.plain{list-style:none;padding-left:0;display:flex;flex-direction:column;gap:6px;margin:0;max-width:78ch}
-ol.steps li::marker{font-family:var(--f-num);color:var(--muted);font-size:13px}
+.ohje-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.prog{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex:1 1 0;min-width:0;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prog .track{min-width:40px}
+.prog .track{flex:1;max-width:200px;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.prog .track i{display:block;height:100%;background:var(--ok);border-radius:inherit;transition:width .3s}
+.ohje-bar .row{gap:6px}
+.osa h3{display:flex;align-items:center;gap:10px}
+.osa.valmis h3::after{content:"";width:20px;height:20px;flex:none;border-radius:50%;background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/13px no-repeat}
+ol.steps,ul.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-width:78ch}
+.stepchk{display:flex;gap:12px;align-items:flex-start;padding:9px 10px;margin:0 -10px;border-radius:14px;cursor:pointer;transition:background-color .15s}
+.stepchk input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stepchk:has(input:focus-visible){outline:2px solid var(--focus);outline-offset:-2px}
+.stepchk .no{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:600;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line-strong);font-variant-numeric:tabular-nums;margin-top:-3px;transition:background-color .2s,box-shadow .2s,color .2s}
+.stepchk .tx{min-width:0;transition:opacity .2s}
+.stepchk:has(input:checked) .no{background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/15px no-repeat;box-shadow:none;color:transparent}
+.stepchk:has(input:checked) .tx{opacity:.5}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
-.k{font-family:var(--f-num);font-weight:600;color:var(--accent)}
-.tbl{overflow-x:auto}
+.k{font-family:var(--f-num);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%;font-size:14px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.03em}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+th{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
 td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
-.meter{display:flex;gap:3px;margin:6px 0}
-.meter i{flex:1;height:8px;border-radius:3px;background:var(--surface-2)}
+.meter{display:flex;gap:4px;margin:8px 0;max-width:320px}
+.meter i{flex:1;height:8px;border-radius:99px;background:var(--surface-2)}
 .meter i.on{background:var(--accent)}
-.bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;min-width:60px}
-.bar>i{display:block;height:100%;background:var(--ok)}
-.copyarea{width:100%;min-height:160px;font-family:var(--f-num);font-size:12.5px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
-.bands{display:flex;flex-direction:column;gap:8px}
-.band{display:grid;grid-template-columns:44px minmax(0,1fr) 64px 64px 30px;grid-template-areas:"n y r g d" "n t t t .";gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
-.band .bn{grid-area:n;font-family:var(--f-num);font-size:12px;color:var(--muted);align-self:start;padding-top:9px;display:flex;gap:5px;align-items:center}
-.band .bn i{width:10px;height:10px;border-radius:2px;border:1px solid var(--line);flex:none}
-.band [data-bf="y"]{grid-area:y}.band [data-bf="t"]{grid-area:t}.band .r{grid-area:r}.band .g{grid-area:g}.band .d{grid-area:d}
-.band input,.band select{min-height:34px;padding:6px 8px;font-size:13px;background:var(--surface)}
-.band .unit input{padding-right:30px}.band .unit span{right:6px;font-size:11px}
-.band .d{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1}
-.chartwrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
-.chartwrap svg{max-width:100%;height:auto}
-.chartcap{font-size:12.5px;color:var(--muted);max-width:32ch}
-.chartnum{fill:var(--muted);font-family:var(--f-num);font-size:8px}
-.foot{margin-top:28px;font-size:12.5px;color:var(--muted);max-width:90ch}
+.bar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;min-width:60px}
+.bar>i{display:block;height:100%;background:var(--ok);border-radius:inherit}
+.copyarea{width:100%;min-height:160px;font-family:ui-monospace,Menlo,monospace;font-size:13px;background:var(--surface-2);color:var(--ink);border:0;border-radius:var(--r-ctl);padding:12px;margin-top:12px}
+.foot{margin:6px 4px 0;font-size:12.5px;color:var(--muted);max-width:90ch}
 .foot a{color:inherit}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* hover vain hiirelle: kosketusnäytöllä korostus jäisi muuten päälle napautuksen jälkeen */
+@media (hover:hover){
+  .iconbtn:hover{background:var(--surface-2)}
+  input[type=number]:hover,input[type=text]:hover,input[type=url]:hover,select:hover{background-color:var(--surface-3)}
+  .stepper .step:hover{color:var(--accent)}
+  .seg button:hover{color:var(--ink)}
+  .btn:hover{background:var(--surface-3)}
+  .btn.primary:hover{background:color-mix(in srgb,var(--accent) 86%,#000)}
+  .btn.ghost:hover{background:var(--surface-2);color:var(--ink)}
+  .band input:hover,.band select:hover{background-color:var(--surface)}
+  .band .d:hover{background:var(--surface-3);color:var(--ink)}
+  .tabs button:hover{background:var(--surface-2);color:var(--ink)}
+  .stepchk:hover{background:var(--surface-2)}
+}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 /* 2D-kaavan tekstit */
 .dim{stroke:var(--muted);stroke-width:.06;fill:none}
@@ -163,24 +289,147 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
 .dimtxt.m{fill:var(--muted);font-size:.8px}
 .outline{fill:none;stroke:var(--ink);stroke-opacity:.55;stroke-width:.07;stroke-linejoin:round}
 .centre{stroke:var(--ink);stroke-opacity:.18;stroke-width:.05;stroke-dasharray:.3 .3;fill:none}
+
+/* --- keskileveä --- */
+@media (max-width:1100px) and (min-width:861px){
+  .layout{grid-template-columns:minmax(320px,360px) minmax(0,1fr)}
+  .lede{display:none}
+}
+
+/* --- puhelin --- */
+@media (max-width:860px){
+  :root{--gl:max(16px,env(safe-area-inset-left,0px)); --gr:max(16px,env(safe-area-inset-right,0px)); --r-card:20px}
+  body{font-size:15.5px}
+  .wrap{padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+  .top{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"brand theme" "lede lede";gap:12px 12px;margin-bottom:16px}
+  .lede{justify-self:start;font-size:14px}
+  .logo{width:42px;height:42px;border-radius:14px}
+  .eyebrow{display:none}
+  h1{font-size:27px;margin:0}
+  .layout{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+  .layout>*{min-width:0}
+  .viewcard{order:1;position:sticky;top:0;z-index:20;margin:0 calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));border-radius:0 0 26px 26px;padding-top:env(safe-area-inset-top,0px);box-shadow:0 10px 30px -18px rgba(0,0,0,.35),0 1px 0 var(--glass-line)}
+  .view{height:clamp(230px,40svh,440px)}
+  .viewtools{top:10px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px))}
+  .viewtools .iconbtn{width:40px;height:40px}
+  .seg button{min-height:36px;padding:0 13px}
+  .summary{order:2}
+  .controls{order:3;position:static;max-height:none;overflow:visible;padding:0;margin:0}
+  .ctl-title{display:block}
+  .panel{order:4}
+  .foot{order:5}
+  .legend{flex-wrap:nowrap;overflow-x:auto;margin:0 calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));padding:2px var(--gr) 4px var(--gl);scrollbar-width:none;scroll-padding-inline:var(--gl)}
+  .legend::-webkit-scrollbar,.stats::-webkit-scrollbar{display:none}
+  .legend span{flex:none;max-width:85vw}
+  .stats{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));padding:2px var(--gr) 6px var(--gl);scroll-padding-inline:var(--gl);scrollbar-width:none}
+  .stat{flex:0 0 auto;min-width:140px;scroll-snap-align:start}
+  input[type=number],input[type=text],input[type=url],select{font-size:16px}
+  .tabpanel{padding:18px 18px 24px}
+  .tabpanel h3{font-size:20px}
+  .tabs{padding:8px}
+  .ohje-bar{position:sticky;top:0;z-index:5;background:var(--surface);margin:-18px -18px 6px;padding:14px 18px 12px;border-radius:var(--r-card) var(--r-card) 0 0}
+  .ohje-bar{flex-wrap:nowrap}
+  .ohje-bar .row{flex-wrap:nowrap}
+  .ohje-bar .btn .lbl,.ohje-bar .prog .lbl{display:none}
+  .ohje-bar .btn{width:40px;padding:0}
+  .stepchk{padding:10px 8px;margin:0 -8px}
+  table.subst thead{display:none}
+  table.subst,table.subst tbody{display:block}
+  table.subst tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
+  table.subst tr:last-child{border-bottom:0}
+  table.subst td{border:0;padding:0;text-align:left}
+  table.subst td:first-child{grid-column:1/-1}
+  table.subst td[data-label]::before{content:attr(data-label);display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:2px;font-family:var(--f-ui)}
+  table.subst td:nth-child(5){grid-column:1/3;align-self:center}
+  table.subst td:nth-child(6){align-self:center;justify-self:end}
+  /* alapalkki */
+  .tabbar{display:flex;position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 24px));padding:6px;gap:4px;border-radius:999px;box-shadow:0 0 0 1px var(--glass-line),0 12px 36px -10px rgba(0,0,0,.35)}
+  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:none;color:var(--muted);font:inherit;font-size:11.5px;font-weight:600;letter-spacing:.01em;min-height:54px;border-radius:999px;cursor:pointer;transition:background-color .2s,color .2s;touch-action:manipulation}
+  .tabbar .ic{width:23px;height:23px}
+  .tabbar button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  body[data-screen="design"] .panel,body[data-screen="design"] .foot{display:none}
+  body[data-screen="ohje"] .viewcard,body[data-screen="ohje"] .summary,body[data-screen="ohje"] .controls,body[data-screen="ohje"] .foot,body[data-screen="ohje"] .tabs{display:none}
+  body[data-screen="calc"] .viewcard,body[data-screen="calc"] .controls,body[data-screen="calc"] .legend,body[data-screen="calc"] #t-ohje{display:none}
+  body:not([data-screen="design"]) .top .lede{display:none}
+}
+/* puhelin vaakatasossa: esikatselu ei jää kiinni ylös, muuten säädöille ei jäisi tilaa */
+@media (max-width:860px) and (max-height:500px){
+  .viewcard{position:relative;margin:0;border-radius:var(--r-card)}
+  .view{height:78svh}
+}
+@media (max-width:380px){
+  .fields{gap:10px}
+  .stepper .step{width:30px}
+  .band-bot{grid-template-columns:minmax(0,1fr) 70px 70px}
+}
 </style>
 </head>
-<body>
+<body data-screen="design">
+<script>try{ var sc=localStorage.getItem('sukkasimulaattori-v2-screen'); if(sc==='ohje'||sc==='calc') document.body.dataset.screen=sc; }catch(e){}</script>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-sock" viewBox="0 0 24 24"><path d="M8.5 2.8h7v8l3.4 3.2a3.7 3.7 0 0 1-5.1 5.4L9.6 15.6a3.6 3.6 0 0 1-1.1-2.6z"/><path d="M8.5 6h7"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
+  <symbol id="i-yarn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M5.6 7.4c4.6.4 9.2 3.5 11.6 9.6"/><path d="M3.8 12.6c4 0 7.9 2.4 9.6 7.6"/><path d="M10 3.8c3.6 2.4 6.6 6.4 7.9 11"/></symbol>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="19" height="9" rx="2"/><path d="M6.5 7.5v3M10.5 7.5v4.5M14.5 7.5v3M18.5 7.5v4.5"/></symbol>
+  <symbol id="i-needles" viewBox="0 0 24 24"><path d="M5 19.5L17.4 7.1"/><path d="M19 19.5L6.6 7.1"/><circle cx="18.6" cy="5.9" r="1.7"/><circle cx="5.4" cy="5.9" r="1.7"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3.5l8.5 4.6L12 12.7 3.5 8.1z"/><path d="M3.5 12.2l8.5 4.6 8.5-4.6"/><path d="M3.5 16.2l8.5 4.6 8.5-4.6"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c1.3 0 2-1 1.5-2.2-.6-1.4.3-2.8 1.8-2.8h1.7A4 4 0 0 0 21 12c0-5-4-9-9-9z"/><circle cx="7.5" cy="11.5" r="1.1"/><circle cx="10.5" cy="7.4" r="1.1"/><circle cx="15.4" cy="8" r="1.1"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="M3.8 6.5l1.4 1.4L7.6 5.3"/><path d="M3.8 12l1.4 1.4 2.4-2.6"/><path d="M3.8 17.5l1.4 1.4 2.4-2.6"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="3"/><path d="M8 7.5h8"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01" stroke-width="2.6"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
+  <symbol id="i-focus" viewBox="0 0 24 24"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/><circle cx="12" cy="12" r="2.6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.6A8 8 0 0 1 9.4 4 8 8 0 1 0 20 14.6z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6A2.5 2.5 0 0 0 13 3.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1v.1h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></symbol>
+</svg>
 
 <div class="wrap">
   <header class="top">
-    <div>
-      <div class="eyebrow">Sukan suunnittelu · laskuri · simulaatio</div>
-      <h1>Sukkasimulaattori</h1>
+    <div class="brand">
+      <span class="logo" aria-hidden="true"><svg class="ic"><use href="#i-sock"/></svg></span>
+      <div>
+        <div class="eyebrow">Sukan suunnittelu · laskuri · simulaatio</div>
+        <h1>Sukkasimulaattori</h1>
+      </div>
     </div>
     <p class="lede">Liitä langan linkki, säädä koko ja rakenne, ja katso sukka 3D:nä tai kaavana. Ohje, silmukkamäärät, lankamenekki ja puikkosuositus päivittyvät samalla.</p>
+    <button class="iconbtn" type="button" id="themeBtn" aria-label="Vaihda tumma tai vaalea teema" title="Tumma / vaalea teema"><svg class="ic"><use href="#i-moon"/></svg></button>
   </header>
 
-  <div class="layout">
+  <main class="layout">
+    <!-- ============ NÄYTTÄMÖ ============ -->
+    <section class="viewcard" aria-label="Sukan esikatselu">
+      <div class="view" id="view">
+        <div id="v3dWrap" style="width:100%;height:100%"></div>
+        <div id="v2dWrap" style="width:100%;height:100%" hidden></div>
+        <div class="viewtools">
+          <div class="seg glass" role="group" aria-label="Näkymä">
+            <button type="button" id="v3d" data-view="3d">3D</button>
+            <button type="button" id="v2d" data-view="2d">2D-kaava</button>
+          </div>
+          <div class="row">
+            <label class="iconbtn glass" title="Pyöritä automaattisesti"><input type="checkbox" id="autoRot" class="sr"><svg class="ic"><use href="#i-rotate"/></svg><span class="sr">Pyöritä</span></label>
+            <button class="iconbtn glass" type="button" id="resetView" title="Palauta näkymä" aria-label="Palauta näkymä"><svg class="ic"><use href="#i-focus"/></svg></button>
+          </div>
+        </div>
+        <div class="viewnote glass" id="viewNote">Raahaa pyörittääksesi · rulla tai nipistys zoomaa</div>
+      </div>
+    </section>
+
+    <div class="summary">
+      <div class="legend" id="legend"></div>
+      <dl class="stats" id="stats"></dl>
+      <div class="notes" id="warnings"></div>
+    </div>
+
     <!-- ============ SÄÄDÖT ============ -->
     <aside class="controls" aria-label="Säädöt">
+      <h2 class="ctl-title">Säädöt</h2>
       <details class="sec" open>
-        <summary>Malli <span class="hint" id="presetHint"></span></summary>
+        <summary><span class="sec-ic"><svg class="ic"><use href="#i-star"/></svg></span><span class="sec-tx"><b>Malli</b><span class="hint" id="presetHint"></span></span></summary>
         <div class="sec-body">
           <div class="f"><label for="presetSel">Valmis malli</label>
             <select id="presetSel"></select></div>
@@ -189,7 +438,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
         </div>
       </details>
       <details class="sec" open>
-        <summary>Langat <span class="hint" id="yarnHint"></span></summary>
+        <summary><span class="sec-ic"><svg class="ic"><use href="#i-yarn"/></svg></span><span class="sec-tx"><b>Langat</b><span class="hint" id="yarnHint"></span></span></summary>
         <div class="sec-body">
           <div id="yarnList" class="notes" style="gap:10px"></div>
           <div class="row"><button class="btn small" id="addYarn" type="button">+ Lisää lanka</button></div>
@@ -198,7 +447,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
       </details>
 
       <details class="sec" open>
-        <summary>Koko ja mitat <span class="hint" id="sizeHint"></span></summary>
+        <summary><span class="sec-ic"><svg class="ic"><use href="#i-ruler"/></svg></span><span class="sec-tx"><b>Koko ja mitat</b><span class="hint" id="sizeHint"></span></span></summary>
         <div class="sec-body">
           <div class="fields">
             <div class="f wide">
@@ -222,7 +471,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
       </details>
 
       <details class="sec" open>
-        <summary>Neuletiheys ja puikot <span class="hint" id="gaugeHint"></span></summary>
+        <summary><span class="sec-ic"><svg class="ic"><use href="#i-needles"/></svg></span><span class="sec-tx"><b>Neuletiheys ja puikot</b><span class="hint" id="gaugeHint"></span></span></summary>
         <div class="sec-body">
           <div class="fields">
             <div class="f"><label for="needle">Puikkokoko</label><select id="needle" data-k="needle" data-type="num"></select></div>
@@ -244,7 +493,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
       </details>
 
       <details class="sec" open>
-        <summary>Rakenne <span class="hint" id="buildHint"></span></summary>
+        <summary><span class="sec-ic"><svg class="ic"><use href="#i-layers"/></svg></span><span class="sec-tx"><b>Rakenne</b><span class="hint" id="buildHint"></span></span></summary>
         <div class="sec-body">
           <div class="f"><span class="lbl">Neulontasuunta</span>
             <div class="seg" role="group" aria-label="Neulontasuunta">
@@ -268,8 +517,8 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
                 <option value="rib">Joustin koko varren</option>
               </select></div>
             <div class="f wide"><label class="check"><input type="checkbox" id="instepRib" data-k="instepRib" data-type="check"> Jatka joustinta jalkapöydän puolelle</label></div>
-            <div class="f"><label for="heel">Kantapää</label><select id="heel" data-k="heel"></select></div>
-            <div class="f"><label for="heelSt">Kantalapun neule</label>
+            <div class="f wide"><label for="heel">Kantapää</label><select id="heel" data-k="heel"></select></div>
+            <div class="f wide"><label for="heelSt">Kantalapun neule</label>
               <select id="heelSt" data-k="heelSt">
                 <option value="slip">Vahvistettu (nostettu s)</option>
                 <option value="eye">Kuviollinen vahvistus</option>
@@ -294,7 +543,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
       </details>
 
       <details class="sec" open>
-        <summary>Värit ja raidat</summary>
+        <summary><span class="sec-ic"><svg class="ic"><use href="#i-palette"/></svg></span><span class="sec-tx"><b>Värit ja raidat</b><span class="hint" id="colorHint"></span></span></summary>
         <div class="sec-body">
           <p class="help">Valitse, millä langalla kukin osa neulotaan.</p>
           <div class="fields" id="zoneFields">
@@ -305,13 +554,13 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
             <div class="f"><label for="zToe">Kärki</label><select id="zToe" data-zone="toe"></select></div>
           </div>
           <div class="fields">
-            <div class="f"><label for="stMode">Raidat ja kirjoneule</label>
+            <div class="f wide"><label for="stMode">Raidat ja kirjoneule</label>
               <select id="stMode" data-k="stripes.mode">
                 <option value="off">Ei raitoja</option>
                 <option value="simple">Kaksiväriset raidat</option>
                 <option value="seq">Raitajakso / kirjoneule</option>
               </select></div>
-            <div class="f" id="whereField"><label for="stWhere">Missä</label>
+            <div class="f wide" id="whereField"><label for="stWhere">Missä</label>
               <select id="stWhere" data-k="stripes.where">
                 <option value="leg">Varressa</option>
                 <option value="foot">Jalkaterässä</option>
@@ -332,50 +581,34 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
         </div>
       </details>
     </aside>
+    <script>/* puhelimessa säätöosiot alkavat kiinni, ja vain yksi on auki kerrallaan */
+      if(window.matchMedia('(max-width:860px)').matches) document.querySelectorAll('details.sec').forEach(function(d){ d.open=false; d.setAttribute('name','saadot'); });</script>
 
-    <!-- ============ NÄYTTÄMÖ ============ -->
-    <main class="stage">
-      <section class="viewcard" aria-label="Sukan esikatselu">
-        <div class="viewbar">
-          <div class="seg" role="group" aria-label="Näkymä">
-            <button type="button" id="v3d" data-view="3d">3D</button>
-            <button type="button" id="v2d" data-view="2d">2D-kaava</button>
-          </div>
-          <div class="row">
-            <label class="check" style="font-size:13px"><input type="checkbox" id="autoRot"> Pyöritä</label>
-            <button class="btn small ghost" type="button" id="resetView">Palauta näkymä</button>
-          </div>
-        </div>
-        <div class="view" id="view">
-          <div id="v3dWrap" style="width:100%;height:100%"></div>
-          <div id="v2dWrap" style="width:100%;height:100%" hidden></div>
-          <div class="viewnote" id="viewNote">Raahaa pyörittääksesi · rulla tai nipistys zoomaa</div>
-        </div>
-        <div class="legend" id="legend"></div>
-      </section>
+    <!-- ============ TULOKSET ============ -->
+    <section class="panel" aria-label="Tulokset">
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" aria-selected="true" data-tab="ohje" id="t-ohje">Ohje</button>
+        <button role="tab" aria-selected="false" data-tab="silmukat" id="t-silmukat">Silmukkamäärät</button>
+        <button role="tab" aria-selected="false" data-tab="lanka" id="t-lanka">Lankaa tarvitaan</button>
+        <button role="tab" aria-selected="false" data-tab="puikot" id="t-puikot">Puikot</button>
+        <button role="tab" aria-selected="false" data-tab="korvaa" id="t-korvaa">Korvaava lanka</button>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="p-ohje"></div>
+      <div class="tabpanel" role="tabpanel" id="p-silmukat" hidden></div>
+      <div class="tabpanel" role="tabpanel" id="p-lanka" hidden></div>
+      <div class="tabpanel" role="tabpanel" id="p-puikot" hidden></div>
+      <div class="tabpanel" role="tabpanel" id="p-korvaa" hidden></div>
+    </section>
 
-      <dl class="stats" id="stats"></dl>
-      <div class="notes" id="warnings"></div>
-
-      <section class="panel" aria-label="Tulokset">
-        <div class="tabs" role="tablist" id="tabs">
-          <button role="tab" aria-selected="true" data-tab="ohje" id="t-ohje">Ohje</button>
-          <button role="tab" aria-selected="false" data-tab="silmukat" id="t-silmukat">Silmukkamäärät</button>
-          <button role="tab" aria-selected="false" data-tab="lanka" id="t-lanka">Lankaa tarvitaan</button>
-          <button role="tab" aria-selected="false" data-tab="puikot" id="t-puikot">Puikot</button>
-          <button role="tab" aria-selected="false" data-tab="korvaa" id="t-korvaa">Korvaava lanka</button>
-        </div>
-        <div class="tabpanel" role="tabpanel" id="p-ohje"></div>
-        <div class="tabpanel" role="tabpanel" id="p-silmukat" hidden></div>
-        <div class="tabpanel" role="tabpanel" id="p-lanka" hidden></div>
-        <div class="tabpanel" role="tabpanel" id="p-puikot" hidden></div>
-        <div class="tabpanel" role="tabpanel" id="p-korvaa" hidden></div>
-      </section>
-
-      <p class="foot">Valmiiden lankojen tiedot on koottu valmistajien ja kauppojen tuotesivuilta lokakuussa 2026; tarkista silti oman keräsi vyöte. Silmukkamäärät ja lankamenekki ovat laskennallisia arvioita: neulo mallitilkku ja syötä oma neuletiheytesi, niin luvut tarkentuvat. Lähteet: <a href="https://www.prisma.fi/tuotteet/111282954/novita-lanka-7-veljesta-100g-pellava-061-111282954" target="_blank" rel="noopener">Novita 7 Veljestä</a>, <a href="https://www.prisma.fi/tuotteet/111175495/novita-lanka-nalle-100g-laivasto-170-111175495" target="_blank" rel="noopener">Novita Nalle</a>, <a href="https://titityy.fi/en/product/tukuwool-sock/10582" target="_blank" rel="noopener">Tukuwool Sock</a>, <a href="https://www.galthouseofyarn.ca/products/garnstudio-drops-fabel" target="_blank" rel="noopener">DROPS Fabel</a>, <a href="https://www.lovecrafts.com/en-gb/p/regia-4-ply-50g" target="_blank" rel="noopener">Regia 4-ply</a>, <a href="https://www.lovecrafts.com/en-us/products/regia-6-ply" target="_blank" rel="noopener">Regia 6-ply</a>, <a href="https://lindehobby.com/needle-size-351/opal-uni-4-ply-p5090" target="_blank" rel="noopener">Opal Uni 4-ply</a>, <a href="https://lindehobby.com/sock-yarn-202/lana-grossa-meilenweit-100-p7165" target="_blank" rel="noopener">Lana Grossa Meilenweit 100</a>, <a href="https://www.woolwarehouse.co.uk/west-yorkshire-spinners-signature-4-ply-owl-877-100g" target="_blank" rel="noopener">WYS Signature 4 Ply</a>.</p>
-    </main>
-  </div>
+    <p class="foot">Valmiiden lankojen tiedot on koottu valmistajien ja kauppojen tuotesivuilta lokakuussa 2026; tarkista silti oman keräsi vyöte. Silmukkamäärät ja lankamenekki ovat laskennallisia arvioita: neulo mallitilkku ja syötä oma neuletiheytesi, niin luvut tarkentuvat. Lähteet: <a href="https://www.prisma.fi/tuotteet/111282954/novita-lanka-7-veljesta-100g-pellava-061-111282954" target="_blank" rel="noopener">Novita 7 Veljestä</a>, <a href="https://www.prisma.fi/tuotteet/111175495/novita-lanka-nalle-100g-laivasto-170-111175495" target="_blank" rel="noopener">Novita Nalle</a>, <a href="https://titityy.fi/en/product/tukuwool-sock/10582" target="_blank" rel="noopener">Tukuwool Sock</a>, <a href="https://www.galthouseofyarn.ca/products/garnstudio-drops-fabel" target="_blank" rel="noopener">DROPS Fabel</a>, <a href="https://www.lovecrafts.com/en-gb/p/regia-4-ply-50g" target="_blank" rel="noopener">Regia 4-ply</a>, <a href="https://www.lovecrafts.com/en-us/products/regia-6-ply" target="_blank" rel="noopener">Regia 6-ply</a>, <a href="https://lindehobby.com/needle-size-351/opal-uni-4-ply-p5090" target="_blank" rel="noopener">Opal Uni 4-ply</a>, <a href="https://lindehobby.com/sock-yarn-202/lana-grossa-meilenweit-100-p7165" target="_blank" rel="noopener">Lana Grossa Meilenweit 100</a>, <a href="https://www.woolwarehouse.co.uk/west-yorkshire-spinners-signature-4-ply-owl-877-100g" target="_blank" rel="noopener">WYS Signature 4 Ply</a>.</p>
+  </main>
 </div>
+
+<nav class="tabbar glass" aria-label="Näkymät">
+  <button type="button" data-screen="design" aria-current="page"><svg class="ic"><use href="#i-sock"/></svg><span>Suunnittele</span></button>
+  <button type="button" data-screen="ohje" aria-current="false"><svg class="ic"><use href="#i-list"/></svg><span>Ohje</span></button>
+  <button type="button" data-screen="calc" aria-current="false"><svg class="ic"><use href="#i-calc"/></svg><span>Laskelmat</span></button>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -771,7 +1004,19 @@ function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ try{ const 
   const nd=$('#needle');
   for(const n of STD_NEEDLES){ const o=document.createElement('option'); o.value=n; o.textContent=mm(n); nd.appendChild(o); }
   const ps=$('#presetSel'); for(const [k,v] of Object.entries(PRESETS)){ const o=document.createElement('option'); o.value=k; o.textContent=v.name; ps.appendChild(o); }
+  // −/+ -painikkeet numerokenttiin (helpompi säätää puhelimella)
+  for(const inp of $$('.controls .unit > input[type=number][data-k]')){
+    const u=inp.parentElement; u.classList.add('stepper'); const nm=(($(`label[for="${inp.id}"]`)||{}).textContent||'').trim();
+    const mk=(d,t,l)=>{ const b=document.createElement('button'); b.type='button'; b.className='step'; b.dataset.step=d; b.textContent=t; b.setAttribute('aria-label',`${l}: ${nm}`); return b; };
+    u.prepend(mk(-1,'−','Vähennä')); u.append(mk(1,'+','Lisää'));
+  }
 })();
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.stepper .step'); if(!b) return; const inp=$('input',b.parentElement);
+  if(inp.value==='') inp.value=inp.min||0;
+  try{ +b.dataset.step>0?inp.stepUp():inp.stepDown(); }catch(err){ return; }
+  inp.dispatchEvent(new Event('input',{bubbles:true}));
+});
 const CASTON_LABELS={longtail:'Ristiinluonti (perusluonti)',german:'Kierretty ristiinluonti (joustava)',italian:'Italialainen luonti (joustimelle)',judy:'Judyn taikaluonti',turkish:'Turkkilainen luonti'};
 function fillHeelOptions(){
   const sel=$('#heel'); sel.innerHTML='';
@@ -804,14 +1049,15 @@ function syncInputs(){
   $('#gussetEvery').value=String(S.gussetEvery); $('#gussetExtra').value=String(S.gussetExtra);
   const pr=PRESETS[S.preset]; $('#presetSel').value=S.preset&&PRESETS[S.preset]?S.preset:'helpot';
   $('#presetNote').innerHTML=pr?esc(pr.note)+(pr.src?` <a class="linkout" href="${esc(pr.src)}" target="_blank" rel="noopener">Alkuperäinen ohje ↗</a>`:''):'Omat asetukset.';
-  $('#presetHint').textContent=pr?'':'oma';
+  $('#presetHint').textContent=pr?pr.name.split(' · ')[0]:'Omat asetukset';
   $('#instepRib').closest('.f').hidden=S.legPat!=='rib';
   $('#heelSt').closest('.f').hidden=!(HEELS[S.heel]&&HEELS[S.heel].flap);
   fillZoneSelects();
   renderBands();
 }
+function yarnOpt(y,i){ const nm=[y.brand,y.name].filter(Boolean).join(' ')||'Nimetön lanka'; return `${i+1}. ${y.colorName?y.colorName.charAt(0).toUpperCase()+y.colorName.slice(1)+' – ':''}${nm}`; }
 function fillZoneSelects(){
-  const opts=S.yarns.map((y,i)=>`<option value="${i}">${i+1}. ${esc(yarnLabel(y))}</option>`).join('');
+  const opts=S.yarns.map((y,i)=>`<option value="${i}">${esc(yarnOpt(y,i))}</option>`).join('');
   for(const el of $$('[data-zone]')){ el.innerHTML=opts; el.value=clamp(S.zone[el.dataset.zone]|0,0,S.yarns.length-1); }
   const sy=$('#stYarn'); sy.innerHTML=opts; sy.value=clamp(S.stripes.yarn|0,0,S.yarns.length-1);
 }
@@ -819,14 +1065,15 @@ function yarnHex(y){ if(!y) return '#888888'; return (y.colorType==='solid'||y.c
 function renderBands(){
   const list=$('#bandList'); if(!list) return;
   const bands=S.stripes.bands||[]; let row=1;
-  const yopts=sel=>S.yarns.map((y,i)=>`<option value="${i}" ${i===sel?'selected':''}>${i+1}. ${esc(yarnLabel(y))}</option>`).join('');
+  const yopts=sel=>S.yarns.map((y,i)=>`<option value="${i}" ${i===sel?'selected':''}>${esc(yarnOpt(y,i))}</option>`).join('');
   list.innerHTML=bands.map((b,j)=>{ const start=row+(b.gap|0); const end=start+Math.max(1,b.r|0)-1; row=end+1;
-    return `<div class="band" data-b="${j}"><span class="bn"><i style="background:${esc(yarnHex(S.yarns[b.y|0]))}"></i>${start===end?start:start+'–'+end}</span>
-      <select data-bf="y" aria-label="Raidan lanka">${yopts(b.y|0)}</select>
-      <div class="unit r"><input type="number" data-bf="r" min="1" max="60" value="${b.r|0}" aria-label="Raidan kerrokset"><span>krs</span></div>
-      <div class="unit g"><input type="number" data-bf="gap" min="0" max="40" value="${b.gap|0}" aria-label="Pohjaväriä ennen raitaa"><span>väli</span></div>
-      <button type="button" class="d" data-bf="del" aria-label="Poista raita">×</button>
-      <select data-bf="t" aria-label="Raidan tyyppi">${Object.entries(BAND_TYPES).map(([k,v])=>`<option value="${k}" ${b.t===k?'selected':''}>${v}</option>`).join('')}</select></div>`; }).join('')||'<p class="help">Ei raitoja vielä.</p>';
+    return `<div class="band" data-b="${j}">
+      <div class="band-top"><span class="bn"><i style="background:${esc(yarnHex(S.yarns[b.y|0]))}"></i>${start===end?start:start+'–'+end}</span>
+        <select data-bf="y" aria-label="Raidan lanka">${yopts(b.y|0)}</select>
+        <button type="button" class="d" data-bf="del" aria-label="Poista raita">×</button></div>
+      <div class="band-bot"><select data-bf="t" aria-label="Raidan tyyppi">${Object.entries(BAND_TYPES).map(([k,v])=>`<option value="${k}" ${b.t===k?'selected':''}>${v}</option>`).join('')}</select>
+        <div class="unit r"><input type="number" data-bf="r" min="1" max="60" value="${b.r|0}" aria-label="Raidan kerrokset"><span>krs</span></div>
+        <div class="unit g"><input type="number" data-bf="gap" min="0" max="40" value="${b.gap|0}" aria-label="Pohjaväriä ennen raitaa"><span>väli</span></div></div></div>`; }).join('')||'<p class="help">Ei raitoja vielä.</p>';
   const ex=seqExpand(bands);
   $('#seqSum').textContent=ex.length?`Jakso ${ex.length} krs`:'';
   $('#chartPrev').innerHTML=ex.length?chartSVG(ex,S.zone.leg)+`<p class="chartcap">Kaavio luetaan alhaalta ylös, 1. kerros alimpana. Mallikerta 2 s; kuvassa 4 mallikertaa.</p>`:'';
@@ -929,8 +1176,9 @@ function renderYarns(openIdx){
         ${S.yarns.length>1?`<button type="button" class="btn small ghost" data-act="remove" style="margin-left:auto">Poista lanka</button>`:''}</div>
       </div></details>`;
   }).join('');
-  const used=new Set(Object.values(S.zone)); $('#yarnHint').textContent=`${S.yarns.length} kpl`;
+  renderYarnHint();
 }
+function renderYarnHint(){ $('#yarnHint').innerHTML=S.yarns.map(y=>`<i class="dot" style="background:${esc(swatchBG(y))}"></i>`).join('')+`<span>${S.yarns.length} ${S.yarns.length===1?'lanka':'lankaa'}</span>`; }
 $('#yarnList').addEventListener('input',e=>{
   const card=e.target.closest('.yarn'); if(!card) return; const i=+card.dataset.i; const y=S.yarns[i]; const el=e.target;
   if(el.dataset.y==='preset'){ if(!el.value) return; const keep={url:y.url,color:y.color,colorName:y.colorName,palette:y.palette,stripeRows:y.stripeRows}; S.yarns[i]=fromDB(el.value,keep); const d=DB.find(x=>x.id===el.value); if(d.colorType) S.yarns[i].colorType=d.colorType; S.yarns[i].status=`Tiedot haettu listalta: ${yarnLabel(S.yarns[i])}.`; S.yarns[i].statusKind='ok'; if(i===S.zone.leg && !S.useSwatch){ S.needle=sockNeedle(S.yarns[i]); syncInputs(); } renderYarns(i); fillZoneSelects(); update(); return; }
@@ -958,6 +1206,7 @@ function refreshCardHead(i){
   const y=S.yarns[i]; const card=$(`.yarn[data-i="${i}"]`); if(!card) return;
   const sw=$('.swatch',card); sw.style.background=swatchBG(y);
   const m=yarnM100(y); $('.nm',card).innerHTML=`${i+1}. ${esc([y.brand,y.name].filter(Boolean).join(' ')||'Nimetön lanka')}<small>${m?fmt(m,0)+' m/100 g · ':''}${esc(y.colorName||'')}</small>`;
+  renderYarnHint();
 }
 function setStatus(i,msg,kind){ const y=S.yarns[i]; y.status=msg; y.statusKind=kind||''; const el=$(`#y${i}-status`); if(el){ el.textContent=msg; el.className='status '+(kind||''); } }
 function handleUrl(i,url){
@@ -1178,23 +1427,60 @@ function instructionsText(r){
   head.splice(2,0,'Lankaa:',...yu);
   return head.concat(ins.map(sec=>`${sec.h.toUpperCase()}\n`+sec.items.map((x,i)=>`${i+1}. ${stripHtml(x)}`).join('\n')+'\n')).join('\n');
 }
+/* Tehdyt vaiheet merkitään napauttamalla; merkinnät säilyvät selaimessa. */
+let doneSet=new Set(); try{ const d=JSON.parse(localStorage.getItem(STORE+'-done')||'[]'); if(Array.isArray(d)) doneSet=new Set(d); }catch(e){}
+let wakeLock=null, wantWake=false;
+const stepLi=(key,n,x)=>`<li><label class="stepchk"><input type="checkbox" data-done="${esc(key)}" ${doneSet.has(key)?'checked':''}><span class="no" aria-hidden="true">${n}</span><span class="tx">${x}</span></label></li>`;
 function renderOhje(){
   if(!R) return; const ins=buildInstructions(R);
-  $('#p-ohje').innerHTML=`<div class="row" style="justify-content:flex-end;margin-bottom:6px">
-      <button class="btn small" type="button" id="copyBtn">Kopioi ohje</button>
-      ${downloadsNS?'<button class="btn small" type="button" id="dlBtn">Tallenna tekstitiedostona</button>':''}
-      <span class="status" id="copyStatus"></span></div>
-    ${ins.map(sec=>`<h3>${esc(sec.h)}</h3>${sec.html?`<div class="chartwrap">${sec.html}<ul class="steps plain" style="flex:1;min-width:240px">${sec.items.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:`<ol class="steps">${sec.items.map(x=>`<li>${x}</li>`).join('')}</ol>`}`).join('')}<div id="copyFallback"></div>`;
+  const wakeOn=wantWake&&!!wakeLock;
+  $('#p-ohje').innerHTML=`<div class="ohje-bar">
+      <div class="prog" id="ohjeProg"></div>
+      <div class="row">
+        ${'wakeLock' in navigator?`<button class="btn small${wakeOn?' on':''}" type="button" id="wakeBtn" aria-pressed="${wakeOn}" title="Pidä näyttö päällä neuloessa"><svg class="ic"><use href="#i-bulb"/></svg><span class="lbl">Näyttö päällä</span></button>`:''}
+        <button class="btn small" type="button" id="copyBtn" title="Kopioi ohje"><svg class="ic"><use href="#i-copy"/></svg><span class="lbl">Kopioi ohje</span></button>
+        ${downloadsNS?'<button class="btn small" type="button" id="dlBtn" title="Tallenna tekstitiedostona"><svg class="ic"><use href="#i-download"/></svg><span class="lbl">Tallenna</span></button>':''}
+        <button class="btn small ghost" type="button" id="resetDone" title="Tyhjennä merkinnät"><svg class="ic"><use href="#i-reset"/></svg><span class="lbl">Tyhjennä</span></button>
+      </div>
+    </div>
+    <p class="help" style="margin:12px 0 8px">Napauta vaihetta, kun se on tehty. <span class="status" id="copyStatus"></span></p>
+    ${ins.map(sec=>{ const items=sec.items.map((x,i)=>stepLi(sec.h+'#'+i,sec.html?'':i+1,x)).join('');
+      return `<section class="osa"><h3>${esc(sec.h)}</h3>${sec.html?`<div class="chartwrap">${sec.html}<ul class="steps" style="flex:1;min-width:240px">${items}</ul></div>`:`<ol class="steps">${items}</ol>`}</section>`; }).join('')}<div id="copyFallback"></div>`;
+  updateProgress();
 }
+function updateProgress(){
+  const boxes=$$('#p-ohje [data-done]'); const n=boxes.filter(b=>b.checked).length;
+  for(const s of $$('#p-ohje .osa')){ const b=$$('[data-done]',s); s.classList.toggle('valmis',b.length>0&&b.every(x=>x.checked)); }
+  const el=$('#ohjeProg'); if(el) el.innerHTML=`<span>${n} / ${boxes.length} <span class="lbl">vaihetta </span>tehty</span><span class="track"><i style="width:${boxes.length?(n/boxes.length*100).toFixed(1):0}%"></i></span>`;
+}
+function saveDone(){ try{ localStorage.setItem(STORE+'-done',JSON.stringify([...doneSet])); }catch(e){} }
+document.addEventListener('change',e=>{ const k=e.target.dataset&&e.target.dataset.done; if(k==null) return; if(e.target.checked) doneSet.add(k); else doneSet.delete(k); saveDone(); updateProgress(); });
+async function setWake(on){
+  wantWake=on;
+  try{
+    if(on&&!wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{ wakeLock=null; syncWakeBtn(); }); }
+    else if(!on&&wakeLock){ const w=wakeLock; wakeLock=null; await w.release(); }
+  }catch(err){ wantWake=false; wakeLock=null; const st=$('#copyStatus'); if(st) st.textContent='Näytön pitäminen päällä ei onnistu tässä selaimessa.'; }
+  syncWakeBtn();
+}
+function syncWakeBtn(){ const b=$('#wakeBtn'); if(!b) return; const on=wantWake&&!!wakeLock; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); }
+document.addEventListener('visibilitychange',()=>{ if(wantWake&&!wakeLock&&document.visibilityState==='visible') setWake(true); });
 document.addEventListener('click',async e=>{
-  if(e.target.id==='copyBtn'){
+  const t=e.target.closest('button'); if(!t) return;
+  if(t.id==='copyBtn'){
     const txt=instructionsText(R);
     try{ await navigator.clipboard.writeText(txt); $('#copyStatus').textContent='Kopioitu leikepöydälle.'; }
     catch(err){ $('#copyFallback').innerHTML=`<textarea class="copyarea" id="copyArea" readonly aria-label="Ohjeen teksti"></textarea>`; const ta=$('#copyArea'); ta.value=txt; ta.focus(); ta.select(); $('#copyStatus').textContent='Kopioi valittu teksti (Ctrl/Cmd + C).'; }
   }
-  if(e.target.id==='dlBtn'&&downloadsNS){
+  if(t.id==='dlBtn'&&downloadsNS){
     try{ await downloadsNS.save({filename:`sukkaohje-EU${S.shoe}.txt`,data:instructionsText(R)}); $('#copyStatus').textContent='Tallennettu.'; }
     catch(err){ $('#copyStatus').textContent=err&&err.code==='declined'?'Tallennus peruttiin.':'Tallennus ei onnistunut tässä näkymässä.'; }
+  }
+  if(t.id==='wakeBtn') setWake(!(wantWake&&wakeLock));
+  if(t.id==='resetDone'){
+    if(!doneSet.size){ $('#copyStatus').textContent='Ei merkittyjä vaiheita.'; return; }
+    if(t.dataset.confirm!=='1'){ t.dataset.confirm='1'; $('#copyStatus').textContent='Napauta uudelleen tyhjentääksesi kaikki merkinnät.'; setTimeout(()=>{ t.dataset.confirm=''; },4000); return; }
+    doneSet.clear(); saveDone(); $$('#p-ohje [data-done]').forEach(b=>b.checked=false); t.dataset.confirm=''; $('#copyStatus').textContent='Merkinnät tyhjennetty.'; updateProgress();
   }
 });
 function renderTables(){
@@ -1251,15 +1537,15 @@ function renderSubst(){
     const use=rr?rr.yarnUse[substIdx]:null;
     const dm=m?Math.round((d.meters/d.grams*100/m-1)*100):null;
     return `<tr><td><strong>${esc([d.brand,d.name].join(' '))}</strong><br><span class="help">${esc(d.fiber)}</span></td>
-      <td class="n">${fmt(d.meters/d.grams*100,0)} m<br><span class="help">${dm==null?'':(dm>0?'+':'')+dm+' %'}</span></td>
-      <td class="n">${rr?rr.N+' s':'–'}<br><span class="help">${mm(sockNeedle(d))}</span></td>
-      <td class="n">${use&&use.used?fmt(use.grams,0)+' g':'–'}<br><span class="help">${use&&use.used?use.skeins+' × '+d.grams+' g':''}</span></td>
-      <td style="min-width:90px"><div class="bar"><i style="width:${score}%"></i></div><span class="help num">${score} %</span></td>
+      <td class="n" data-label="m / 100 g">${fmt(d.meters/d.grams*100,0)} m<br><span class="help">${dm==null?'':(dm>0?'+':'')+dm+' %'}</span></td>
+      <td class="n" data-label="Silmukat">${rr?rr.N+' s':'–'}<br><span class="help">${mm(sockNeedle(d))}</span></td>
+      <td class="n" data-label="Menekki">${use&&use.used?fmt(use.grams,0)+' g':'–'}<br><span class="help">${use&&use.used?use.skeins+' × '+d.grams+' g':''}</span></td>
+      <td style="min-width:90px" data-label="Vastaavuus"><div class="bar"><i style="width:${score}%"></i></div><span class="help num">${score} %</span></td>
       <td><button class="btn small" type="button" data-swap="${d.id}">Vaihda</button></td></tr>`;
   }).join('');
   $('#p-korvaa').innerHTML=`<div class="fields" style="max-width:520px"><div class="f wide"><label for="substSel">Korvattava lanka</label><select id="substSel">${S.yarns.map((x,i)=>`<option value="${i}" ${i===substIdx?'selected':''}>${i+1}. ${esc(yarnLabel(x))}</option>`).join('')}</select></div></div>
   <p class="help">Nyt: ${esc(yarnLabel(y))}, ${m?fmt(m,0)+' m / 100 g':'pituus puuttuu'}, ${esc(y.fiber||'koostumus puuttuu')}. Hyvä korvaaja on metrimäärältään ±10 % saman verran per 100 g, ja sukkiin siinä on mielellään polyamidia. Vaihda-painike pitää värit ja säätää puikot uudelle langalle.</p>
-  <div class="tbl"><table><thead><tr><th>Lanka</th><th class="n">m / 100 g</th><th class="n">Silmukat</th><th class="n">Menekki</th><th>Vastaavuus</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="tbl"><table class="subst"><thead><tr><th>Lanka</th><th class="n">m / 100 g</th><th class="n">Silmukat</th><th class="n">Menekki</th><th>Vastaavuus</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="help">Jos haluamasi lanka ei ole listalla, lisää se Langat-osioon linkillä tai vyötteen tiedoilla; vertailu toimii silloinkin.</p>`;
 }
 document.addEventListener('input',e=>{ if(e.target.id==='substSel'){ substIdx=+e.target.value; renderSubst(); } });
@@ -1271,8 +1557,60 @@ document.addEventListener('click',e=>{
   S.yarns[substIdx]=ny; if(substIdx===S.zone.leg){ S.needle=sockNeedle(ny); S.useSwatch=false; }
   renderYarns(substIdx); syncInputs(); update();
 });
-$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-tab]'); if(!b) return; $$('#tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x===b)); $$('.tabpanel').forEach(p=>p.hidden=p.id!=='p-'+b.dataset.tab); try{localStorage.setItem(STORE+'-tab',b.dataset.tab);}catch(err){} });
-try{ const t=localStorage.getItem(STORE+'-tab'); if(t){ const b=$(`#tabs [data-tab="${t}"]`); if(b) b.click(); } }catch(e){}
+let curTab='ohje', lastCalc='silmukat';
+function selectTab(name){
+  if(!$(`#tabs [data-tab="${name}"]`)) return;
+  curTab=name; if(name!=='ohje') lastCalc=name;
+  $$('#tabs [data-tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab===name));
+  $$('.tabpanel').forEach(p=>p.hidden=p.id!=='p-'+name);
+  try{ localStorage.setItem(STORE+'-tab',name); }catch(err){}
+}
+$('#tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-tab]'); if(b) selectTab(b.dataset.tab); });
+try{ const t=localStorage.getItem(STORE+'-tab'); if(t) selectTab(t); }catch(e){}
+
+/* --- puhelimen näkymät: Suunnittele / Ohje / Laskelmat --- */
+const MOBILE=window.matchMedia('(max-width:860px)');
+let screen=document.body.dataset.screen||'design'; const scrollMem={};
+function setScreen(sc){
+  if(!['design','ohje','calc'].includes(sc)) sc='design';
+  const changed=sc!==screen; if(changed) scrollMem[screen]=window.scrollY;
+  screen=sc; document.body.dataset.screen=sc;
+  $$('.tabbar [data-screen]').forEach(b=>b.setAttribute('aria-current',b.dataset.screen===sc?'page':'false'));
+  if(MOBILE.matches){
+    if(sc==='ohje') selectTab('ohje'); else if(sc==='calc'&&curTab==='ohje') selectTab(lastCalc);
+    if(changed) window.scrollTo(0,scrollMem[sc]||0);
+  }
+  try{ localStorage.setItem(STORE+'-screen',sc); }catch(e){}
+  if(sc==='design') req3D();
+}
+$$('.tabbar [data-screen]').forEach(b=>b.addEventListener('click',()=>setScreen(b.dataset.screen)));
+MOBILE.addEventListener('change',()=>{ $$('details.sec').forEach(d=>MOBILE.matches?d.setAttribute('name','saadot'):d.removeAttribute('name')); setScreen(screen); });
+// Puhelimessa avattu osio vieritetään esikatselun alle näkyviin.
+$$('details.sec').forEach(d=>d.addEventListener('toggle',()=>{
+  if(!d.open||!MOBILE.matches) return;
+  requestAnimationFrame(()=>{ const vc=$('.viewcard'); const off=(vc.offsetParent?vc.getBoundingClientRect().height:0)+12;
+    window.scrollTo({top:d.getBoundingClientRect().top+window.scrollY-off,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); });
+}));
+
+/* --- teema --- */
+let theme=null; try{ theme=localStorage.getItem(STORE+'-theme'); }catch(e){}
+const DARK_Q=window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(){
+  const root=document.documentElement;
+  if(theme==='light'||theme==='dark') root.dataset.theme=theme; else { theme=null; delete root.dataset.theme; }
+  const dark=theme?theme==='dark':DARK_Q.matches;
+  $('#themeBtn use').setAttribute('href',dark?'#i-sun':'#i-moon');
+  $('#themeBtn').setAttribute('aria-label',dark?'Vaihda vaaleaan teemaan':'Vaihda tummaan teemaan');
+  $$('meta[name="theme-color"]').forEach((m,i)=>m.setAttribute('content',theme?(dark?'#11100F':'#F5F2ED'):(i?'#11100F':'#F5F2ED')));
+}
+$('#themeBtn').addEventListener('click',()=>{
+  const dark=theme?theme==='dark':DARK_Q.matches; const next=dark?'light':'dark';
+  theme=(next==='dark')===DARK_Q.matches?null:next;
+  try{ theme?localStorage.setItem(STORE+'-theme',theme):localStorage.removeItem(STORE+'-theme'); }catch(e){}
+  applyTheme();
+});
+DARK_Q.addEventListener('change',applyTheme);
+applyTheme();
 
 function renderStats(){
   const r=R; const main=r.yarnUse[S.zone.leg]; const totalG=r.yarnUse.reduce((a,u)=>a+(u.grams||0),0);
@@ -1283,9 +1621,11 @@ function renderStats(){
    <div class="stat"><dt>Lankaa yhteensä</dt><dd>${fmt(totalG,0)} g <small>${S.pair?'pari':'1 kpl'}</small></dd></div>
    <div class="stat"><dt>Jalkaterä · varsi</dt><dd>${fmt(r.footLenSock)} · ${fmt(S.legLen)} <small>cm</small></dd></div>`;
   $('#warnings').innerHTML=r.warn.map(w=>`<div class="note">${esc(w)}</div>`).join('');
-  $('#sizeHint').textContent=`EU ${S.shoe}`;
-  $('#gaugeHint').textContent=`${mm(S.needle)}`;
-  $('#buildHint').textContent=S.dir==='cuff'?'varresta':'kärjestä';
+  $('#sizeHint').textContent=`EU ${S.shoe} · jalka ${fmt(S.footLen)} cm`;
+  $('#gaugeHint').textContent=`${mm(S.needle)} · ${fmt(r.g.sts)} s / 10 cm`;
+  $('#buildHint').textContent=`${S.dir==='cuff'?'Varresta':'Kärjestä'} · ${HEELS[r.heelType].fi.replace(/ \(.*\)/,'')} · ${TOES[r.toe.type]}`;
+  const sm=stripeMode(S);
+  $('#colorHint').textContent=sm==='seq'?`Raitajakso, ${seqExpand(S.stripes.bands).length} krs`:sm==='simple'?`Raidat ${S.stripes.a} + ${S.stripes.b} krs`:'Ei raitoja';
   const gy=S.yarns[S.zone.leg];
   $('#gaugeHelp').textContent=r.sw?`Silmukkamäärät lasketaan mallitilkkusi mukaan.`:`Tiheys on arvioitu langan ${yarnLabel(gy)} vyötteestä puikoille ${mm(S.needle)}${gaugeBase(gy).known?'':' (vyötteen tiheys puuttuu, käytetty paksuusluokan arvoa)'}. Mallitilkku tekee laskusta tarkan.${r.cw?' Kirjoneule kiristää: arviossa on 6 % enemmän silmukoita kuin sileässä neuleessa.':''}`;
   // selite
@@ -1293,7 +1633,8 @@ function renderStats(){
   const seen={}; for(const [k,t] of parts){ const i=S.zone[k]; (seen[i]=seen[i]||[]).push(t); }
   if(stripeMode(S)==='simple'&&S.stripes.yarn!==S.zone.leg){ (seen[S.stripes.yarn]=seen[S.stripes.yarn]||[]).push('raidat'); }
   if(stripeMode(S)==='seq'){ for(const yi of new Set((S.stripes.bands||[]).map(b=>b.y|0))){ if(!S.yarns[yi]) continue; (seen[yi]=seen[yi]||[]); if(!seen[yi].includes('kirjoneule')) seen[yi].push('kirjoneule'); } }
-  $('#legend').innerHTML=Object.entries(seen).map(([i,ts])=>{ const y=S.yarns[i]; const bg=swatchBG(y); return `<span><i style="background:${esc(bg)}"></i>${esc(yarnLabel(y))}: ${ts.join(', ').toLowerCase()}</span>`; }).join('');
+  $('#legend').innerHTML=Object.entries(seen).map(([i,ts])=>{ const y=S.yarns[i]; const bg=swatchBG(y); const nm=y.colorName?y.colorName.charAt(0).toUpperCase()+y.colorName.slice(1):yarnLabel(y);
+    return `<span title="${esc(yarnLabel(y))}: ${esc(ts.join(', ').toLowerCase())}"><i style="background:${esc(bg)}"></i><b>${esc(nm)}</b><em>${esc(ts.join(', ').toLowerCase())}</em></span>`; }).join('');
 }
 
 /* ================= MUOTO (yhteinen 2D/3D) ================= */
@@ -1443,7 +1784,7 @@ function init3D(){
   T3={renderer,scene,camera,pivot,mesh:null,tex:null,bump:null,size:30,needs:true};
   const el=renderer.domElement;
   const ptrs=new Map(); let pinch=null;
-  el.addEventListener('pointerdown',e=>{ el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),dist:camState.dist}; } });
+  el.addEventListener('pointerdown',e=>{ $('#view').classList.add('used'); if(autoRot){ autoRot=false; $('#autoRot').checked=false; } el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),dist:camState.dist}; } });
   el.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId)) return; const p=ptrs.get(e.pointerId); const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
     if(ptrs.size===2&&pinch){ const [a,b]=[...ptrs.values()]; const d=Math.hypot(a.x-b.x,a.y-b.y); camState.dist=clamp(pinch.dist*pinch.d/Math.max(20,d),0.45,2.2); }
     else { camState.yaw+=dx*0.009; camState.pitch=clamp(camState.pitch+dy*0.007,-1.3,1.3); }
@@ -1460,11 +1801,15 @@ function size3D(){ if(!T3) return; const w=$('#v3dWrap'); const W=Math.max(10,w.
 function resetCam(){ camState.yaw=-0.55; camState.pitch=0.18; camState.dist=1; req3D(); }
 let rafOn=false;
 function req3D(){ if(!T3) return; T3.needs=true; if(!rafOn){ rafOn=true; requestAnimationFrame(loop3D); } }
+// Ei piirretä, kun esikatselu ei näy (säästää akkua puhelimessa).
+let viewVisible=true;
+if('IntersectionObserver' in window) new IntersectionObserver(es=>{ viewVisible=es[es.length-1].isIntersecting; if(viewVisible) req3D(); }).observe($('#view'));
 function loop3D(){
-  rafOn=false; if(!T3||$('#v3dWrap').hidden) return;
+  rafOn=false; if(!T3||$('#v3dWrap').hidden||!viewVisible) return;
   if(autoRot){ camState.yaw+=0.006; T3.needs=true; }
   if(T3.needs){ T3.needs=false; T3.pivot.rotation.set(camState.pitch,camState.yaw,0,'XYZ');
-    const fov=T3.camera.fov*Math.PI/180; const fit=T3.size*0.62/Math.tan(fov/2)/Math.min(1,T3.camera.aspect*1.05);
+    const fov=T3.camera.fov*Math.PI/180; const pad=T3.renderer.domElement.clientHeight<520?1.22:1.08; // tilaa painikkeille
+    const fit=pad*T3.size*0.62/Math.tan(fov/2)/Math.min(1,T3.camera.aspect*1.05);
     T3.camera.position.set(0,0,fit*camState.dist); T3.camera.lookAt(0,0,0); T3.renderer.render(T3.scene,T3.camera); }
   if(autoRot){ rafOn=true; requestAnimationFrame(loop3D); }
 }
@@ -1539,11 +1884,12 @@ function build3D(){
 }
 function schedule3D(){ clearTimeout(rebuildTimer); rebuildTimer=setTimeout(()=>{ if(view==='3d'){ if(!build3D()) fallback2D(); } },140); }
 function fallback2D(){ view='2d'; setView(); $('#v3d').disabled=true; $('#viewNote').textContent='3D-näkymä ei ole käytettävissä tässä selaimessa; näytetään kaava.'; }
+const VIEW_HINT=window.matchMedia('(pointer: coarse)').matches?'Pyöritä sormella · nipistä zoomataksesi':'Raahaa pyörittääksesi · rulla zoomaa · tuplaklikkaus palauttaa';
 function setView(){
   $('#v3d').setAttribute('aria-pressed',view==='3d'); $('#v2d').setAttribute('aria-pressed',view==='2d');
   $('#v3dWrap').hidden=view!=='3d'; $('#v2dWrap').hidden=view!=='2d';
   $('#autoRot').closest('label').hidden=view!=='3d'; $('#resetView').hidden=view!=='3d';
-  if(!$('#v3d').disabled){ $('#viewNote').textContent='Raahaa pyörittääksesi · rulla tai nipistys zoomaa'; $('#viewNote').hidden=view!=='3d'; } else $('#viewNote').hidden=false;
+  if(!$('#v3d').disabled){ $('#viewNote').textContent=VIEW_HINT; $('#viewNote').hidden=view!=='3d'; } else $('#viewNote').hidden=false;
   try{ localStorage.setItem(STORE+'-view',view); }catch(e){}
   if(view==='2d') render2D(); else { if(!build3D()) fallback2D(); else size3D(); }
 }
@@ -1559,7 +1905,7 @@ function update(){
   if(view==='2d') render2D(); else schedule3D();
   save();
 }
-renderYarns(); syncInputs(); update(); setView();
+renderYarns(); syncInputs(); update(); setView(); setScreen(screen);
 </script>
 
 </body>
