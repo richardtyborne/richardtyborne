@@ -736,16 +736,19 @@ function calcToe(type,N,H,rpc){
 
 /* --- Kantapää --- */
 function roundTurn(H){
-  const q=Math.min(5,Math.max(1,H/2-1));
-  let rs=H-(H/2+4), ws=H/2-1-q, c=q+3; rs=Math.max(0,rs); ws=Math.max(0,ws);
-  let rows=2, worked=(H/2+4)+(q+4), side='rs';
+  // 1. krs: nosta 1, k o, ylivetokavennus, 1 o; 2. krs: nosta 1, q n, 2 n yhteen, 1 n.
+  // k valitaan niin, että kummallekin sivulle jää yhtä monta silmukkaa (q pariton), jolloin kääntö on keskellä.
+  let q=Math.min(5,Math.max(1,H/2-1)); if(q%2===0) q-=1;
+  const k=(H-3+q)/2;
+  let rs=Math.max(0,H-(k+4)), ws=Math.max(0,k-q-1), c=q+3;
+  let rows=2, worked=(k+4)+(q+4), side='rs';
   let guard=0;
   while((rs>0||ws>0) && guard++<200){
     if(side==='rs'){ if(rs>=2){rs-=2;c+=1;} else if(rs===1){rs=0;} worked+=c+2; side='ws'; }
     else { if(ws>=2){ws-=2;c+=1;} else if(ws===1){ws=0;} worked+=c+2; side='rs'; }
     rows++;
   }
-  return {q,S:c,turnRows:rows,turnStitches:worked};
+  return {q,k,S:c,turnRows:rows,turnStitches:worked};
 }
 function calcHeel(type,N,H,I,rpc,heelSt,opt){
   opt=opt||{}; const ex=clamp(opt.extra|0,0,6), ev=clamp(opt.every|0||2,2,4);
@@ -753,7 +756,7 @@ function calcHeel(type,N,H,I,rpc,heelSt,opt){
   if(type==='round'||type==='band'){
     const flapRows=H; const Pb=flapRows/2; const P=Pb+ex;
     let S,turnRows,turnSt,extra={};
-    if(type==='round'){ const t=roundTurn(H); S=t.S; turnRows=t.turnRows; turnSt=t.turnStitches; extra.q=t.q; }
+    if(type==='round'){ const t=roundTurn(H); S=t.S; turnRows=t.turnRows; turnSt=t.turnStitches; extra.q=t.q; extra.k=t.k; }
     else { let M=Math.round(H/3); if((H-M)%2) M+=1; if(M<4) M=4; const sd=(H-M)/2; S=M; turnRows=2*sd; turnSt=turnRows*(M+1)+M; extra.M=M; extra.side=sd; }
     let P2=P; let T=S+P+P2+I;
     if((T-N)%2){ P2+=1; T+=1; }
@@ -761,7 +764,8 @@ function calcHeel(type,N,H,I,rpc,heelSt,opt){
     const gussetRounds=ev*decs;
     const gussetSt=gussetRounds*(T+N)/2;
     const depth=turnRows/rpc+1.0;
-    return {type,flap:true,flapRows,P,P2,Pb,ex,ev,S,T,decs,gussetRounds,turnRows,depth,
+    const flapCm=flapRows/rpc/(heelSt==='st'?1:1.1); // nostetut silmukat tiivistävät kerroksia n. 10 %
+    return {type,flap:true,flapRows,flapCm,P,P2,Pb,ex,ev,S,T,decs,gussetRounds,turnRows,depth,
       heelStitches:(H*flapRows+turnSt)*fac, gussetSt,
       visRows:turnRows+Math.round(flapRows*0.25), backRows:Math.round(flapRows*0.75),...extra};
   }
@@ -853,7 +857,7 @@ function compute(s){
     add('cuff','Resori','cuff',String(NL),cuffRows,NL*cuffRows,cuffRows/rpc);
     add('leg','Varsi','leg',NL===N?String(N):`${NL} → ${N}`,legRows,legAvg*legRows,legRows/rpc);
     if(heel.flap){
-      add('flap','Kantalappu','heel',String(H),heel.flapRows,null,heel.flapRows/rpc);
+      add('flap','Kantalappu','heel',String(H),heel.flapRows,null,heel.flapCm);
       add('turn',heelType==='band'?'Kantapään nauha':'Kantapään kääntö','heel',`${H} → ${heel.S}`,heel.turnRows,null,null);
       sec[sec.length-2].stitches=heel.heelStitches*(H*heel.flapRows)/(H*heel.flapRows+heel.turnRows*(heel.S+2));
       sec[sec.length-1].stitches=heel.heelStitches-sec[sec.length-2].stitches;
@@ -1290,10 +1294,18 @@ function buildInstructions(r){
   const shortName=i=>{ const y=s.yarns[i]; return y?(y.colorName||yarnLabel(y)):'lanka'; };
   const stripeT=(where)=>{ const st=s.stripes; if(sm!=='simple'||(st.yarn|0)===(z.leg|0)) return null; if(st.where!=='both'&&st.where!==where) return null; return `Raidat: neulo vuorotellen ${st.a} krs ${yarnName(where==='foot'?z.foot:z.leg)} ja ${st.b} krs ${yarnName(st.yarn)}. Kuljeta langat nurjalla, älä katkaise niitä. Porrastuman välttämiseksi nosta uuden värin toisen kerroksen ensimmäinen silmukka neulomatta.`; };
   const change=(from,to)=>z[from]!==z[to]?`Vaihda lanka: ${yarnName(z[to])}.`:null;
+  const kertaa=n=>n===1?'1 kerran':`${n} kertaa`;
+  // [tiheys, kerrat, loppu] -vaiheet; 0 kerran vaiheet jätetään pois
+  const vaiheet=a=>a.filter(p=>p[1]>0).map(([ev,n,tail])=>`${ev} <span class="k">${kertaa(n)}</span>${tail}`).join(', sitten ');
+  // lyhennetyt kerrokset (tiimalasikantapää ja lyhennetty kärki)
+  const srSteps=(n,c,rows)=>[
+    `Lyhennys. 1. krs (oikea puoli): neulo oikein kunnes jäljellä on 1 s, kiedo ja käännä (siirrä s oikealle puikolle, vie lanka toiselle puolelle, siirrä s takaisin, käännä työ). 2. krs: neulo nurin kunnes jäljellä on 1 s, kiedo ja käännä.`,
+    `3. krs: neulo kunnes ennen viimeksi kiedottua silmukkaa on 1 s, kiedo ja käännä. 4. krs samoin nurin. Toista, kunnes keskellä on <span class="k">${c} kietomatonta s</span> ja kummallakin sivulla ${(n-c)/2} kiedottua s.`,
+    `Pidennys. Neulo ensimmäiseen kiedottuun silmukkaan asti, neulo se kietolankoineen, kiedo ja käännä seuraava s. Toista molemmin puolin, kunnes kaikki ${n} s on neulottu (yhteensä n. ${rows} lyhennettyä krs).`];
   const prep=[
     `Neuletiheys: ${g}${r.sw?' (oma mallitilkku).':' (laskettu arvio langan vyötteestä).'}`,
     r.sw?null:'Neulo mallitilkku ennen aloitusta ja syötä oma tiheys säätöihin. Puolikin silmukkaa 10 cm:llä muuttaa sukan ympärystä n. 2 %.',
-    `Sukka neulotaan ${fmt(s.footCirc)} cm:n jalkaterälle ${s.ease>=0?s.ease+' % kapeammaksi':(-s.ease)+' % väljemmäksi, koska kirjoneule ei jousta'}: ${N} s = ${fmt(N/r.spc)} cm. Jalkaterän valmis pituus ${fmt(r.footLenSock)} cm.`,
+    `Sukka neulotaan ${fmt(s.footCirc)} cm:n jalkaterälle ${s.ease>0?s.ease+' % kapeammaksi':s.ease<0?(-s.ease)+' % väljemmäksi'+(r.cw?', koska kirjoneule ei jousta':''):'ilman leveysjoustoa'}: ${N} s = ${fmt(N/r.spc)} cm. Jalkaterän valmis pituus ${fmt(r.footLenSock)} cm.`,
     r.cw?'Kirjoneule: kuljeta käyttämätöntä lankaa nurjalla löysästi, ettei neule kiristy. Pidä kuviolanka koko ajan samassa kädessä (yleensä vasemmassa), jolloin kuvio erottuu tasaisesti. Alkuperäinen ohje kehottaa harjoittelemaan juuri tätä lankojen dominanssia.':null,
     {dpn:'Puikot: 5 sukkapuikkoa. Kerros vaihtuu takakeskellä puikkojen 4 ja 1 välissä; kantapää neulotaan puikkojen 4 ja 1 silmukoilla, jalkapöytä puikoilla 2 ja 3.',ml:'Puikot: pitkä pyöröpuikko (80–100 cm) magic loop -tekniikalla. Toinen puolikas on jalkapöytä, toinen kantapää ja pohja.',two:'Puikot: kaksi pyöröpuikkoa. Toisella jalkapöydän puoli, toisella kantapää ja pohja.',short:'Puikot: lyhyt pyöröpuikko varteen ja jalkaterään; kantapää edestakaisin ja kärki sukkapuikoilla tai magic loopilla.'}[s.needleType]
   ].filter(Boolean);
@@ -1317,12 +1329,12 @@ function buildInstructions(r){
   }
 
   const heelSteps=[];
-  const flapStitch={slip:`vahvistettua neuletta: 1. krs (oikea puoli): *nosta 1 s neulomatta lanka nurjalla, 1 o*, toista. 2. krs (nurja puoli): nosta 1 s neulomatta, neulo loput nurin.`,eye:`kuviollista vahvistusta: 1. krs: *nosta 1 s neulomatta, 1 o*. 2. krs: nosta 1, nurin. 3. krs: nosta 1, 1 o, *nosta 1, 1 o* kerroksen loppuun. 4. krs: nosta 1, nurin.`,st:`sileää neuletta niin, että nostat jokaisen kerroksen 1. silmukan neulomatta.`}[s.heelSt];
+  const flapStitch={slip:`vahvistettua neuletta: 1. krs (oikea puoli): *nosta 1 s neulomatta lanka nurjalla, 1 o*, toista. 2. krs (nurja puoli): nosta 1 s neulomatta, neulo loput nurin.`,eye:`kuviollista vahvistusta: 1. krs: *nosta 1 s neulomatta, 1 o*. 2. krs: nosta 1, nurin. 3. krs: nosta 1, 2 o, *nosta 1, 1 o*, kunnes jäljellä on 1 s, 1 o. 4. krs: nosta 1, nurin. Nostetut silmukat vuorottelevat näin kerroksittain.`,st:`sileää neuletta niin, että nostat jokaisen kerroksen 1. silmukan neulomatta.`}[s.heelSt];
   if(h.flap){
-    heelSteps.push(`${change('leg','heel')||''} Kantalappu: neulo ${heelSide} ${H} silmukalla edestakaisin; jalkapöydän ${I} s odottavat. Neulo ${flapStitch}`.trim());
-    heelSteps.push(`Neulo kantalappua <span class="k">${h.flapRows} krs</span> (n. ${fmt(h.flapRows/r.rpc/1.1)} cm), viimeisenä nurjan puolen kerros. Kummassakin reunassa on nyt ${h.Pb} nostettua silmukkaa.`);
+    heelSteps.push(`${change('leg','heel')||''} Kantalappu: neulo edestakaisin ${heelSide} silmukoilla (${H} s); jalkapöydän ${I} s odottavat. Neulo ${flapStitch}`.trim());
+    heelSteps.push(`Neulo kantalappua <span class="k">${h.flapRows} krs</span> (n. ${fmt(h.flapCm)} cm), viimeisenä nurjan puolen kerros. Kummassakin reunassa on nyt ${h.Pb} nostettua silmukkaa.`);
     if(r.heelType==='round'){
-      heelSteps.push(`Kantapään kääntö. 1. krs (oikea puoli): nosta 1, ${H/2} o, ylivetokavennus, 1 o, käännä. 2. krs: nosta 1, ${h.q} n, 2 n yhteen, 1 n, käännä.`);
+      heelSteps.push(`Kantapään kääntö. 1. krs (oikea puoli): nosta 1, ${h.k} o, ylivetokavennus, 1 o, käännä. 2. krs: nosta 1, ${h.q} n, 2 n yhteen, 1 n, käännä.`);
       heelSteps.push(`3. krs: nosta 1, neulo oikein kunnes ennen rakoa on 1 s, ylivetokavennus (raon kummaltakin puolelta 1 s), 1 o, käännä. 4. krs: nosta 1, neulo nurin kunnes ennen rakoa on 1 s, 2 n yhteen, 1 n, käännä.`);
       heelSteps.push(`Toista 3.–4. krs, kunnes sivujen silmukat on käytetty (yhteensä n. ${h.turnRows} krs). Jos kavennuksen jälkeen ei ole enää silmukkaa, jätä 1 o / 1 n pois. Kantapäähän jää <span class="k">${h.S} s</span>.`);
     } else {
@@ -1331,54 +1343,54 @@ function buildInstructions(r){
       heelSteps.push(`Toista 2.–3. krs, kunnes sivuosien silmukat on kavennettu (yhteensä ${h.turnRows} krs). Kantapäähän jää <span class="k">${h.S} s</span>.`);
     }
   } else if(r.heelType==='hourglass'){
-    heelSteps.push(`${change('leg','heel')||''} Neulo kantapää ${heelSide} ${H} silmukalla edestakaisin; jalkapöydän ${I} s odottavat.`.trim());
-    heelSteps.push(`Lyhennys. 1. krs (oikea puoli): neulo oikein kunnes jäljellä on 1 s, kiedo ja käännä (siirrä s oikealle puikolle, vie lanka toiselle puolelle, siirrä s takaisin, käännä työ). 2. krs: neulo nurin kunnes jäljellä on 1 s, kiedo ja käännä.`);
-    heelSteps.push(`3. krs: neulo kunnes ennen viimeksi kiedottua silmukkaa on 1 s, kiedo ja käännä. 4. krs samoin nurin. Toista, kunnes keskellä on <span class="k">${h.C} kietomatonta s</span> ja kummallakin sivulla ${h.half/2} kiedottua s.`);
-    heelSteps.push(`Pidennys. Neulo ensimmäiseen kiedottuun silmukkaan asti, neulo se kietolankoineen, kiedo ja käännä seuraava s. Toista molemmin puolin, kunnes kaikki ${H} s on neulottu (yhteensä n. ${h.rows} lyhennettyä krs). Neulo ensimmäisellä kokonaisella kerroksella reunojen kietolangat silmukoiden kanssa yhteen.`);
+    heelSteps.push(`${change('leg','heel')||''} Neulo kantapää edestakaisin ${heelSide} silmukoilla (${H} s); jalkapöydän ${I} s odottavat.`.trim());
+    const sr=srSteps(H,h.C,h.rows); sr[2]+=' Neulo ensimmäisellä kokonaisella kerroksella reunojen kietolangat silmukoiden kanssa yhteen.';
+    heelSteps.push(...sr);
   } else if(r.heelType==='boomerang'){
-    heelSteps.push(`${change('leg','heel')||''} Neulo kantapää ${heelSide} ${H} silmukalla. Kaksoissilmukka (KS): käännä työ, vie lanka eteen, nosta 1. s neulomatta ja vedä lankaa tiukasti taakse, jolloin silmukasta tulee kaksinkertainen.`.trim());
+    heelSteps.push(`${change('leg','heel')||''} Neulo kantapää ${heelSide} silmukoilla (${H} s). Kaksoissilmukka (KS): käännä työ, vie lanka eteen, nosta 1. s neulomatta ja vedä lankaa tiukasti taakse, jolloin silmukasta tulee kaksinkertainen.`.trim());
     heelSteps.push(`1. osa: 1. krs (oikea puoli): neulo kantapään silmukat, käännä, tee KS. 2. krs: neulo nurin kerroksen loppuun, käännä, KS. 3. krs: neulo kunnes edellinen KS, käännä, KS. Toista, kunnes keskelle jää <span class="k">${h.C} s</span> ja kummallakin sivulla on ${h.half/2} KS:ää.`);
     heelSteps.push(`Neulo 2 krs kaikilla ${N} silmukalla suljettuna neuleena; neulo kaksoissilmukat yhtenä silmukkana.`);
     heelSteps.push(`2. osa: neulo kantapään keskimmäiset ${h.C} s, käännä, KS; neulo nurin ${h.C-1} s, käännä, KS. Neulo sitten joka kerroksella KS:ään asti, neulo KS yhtenä silmukkana ja 1 s lisää, käännä, KS. Jatka, kunnes kaikki ${H} kantapään s on neulottu.`);
   } else if(r.heelType==='after'){
-    heelSteps.push(`Kantapään paikka: neulo ${heelSide} ${H} s eriväriselllä liukkaalla apulangalla, siirrä ne takaisin vasemmalle puikolle ja neulo ne uudelleen sukkalangalla. Jatka suoraan eteenpäin; kantapää neulotaan lopuksi.`);
+    heelSteps.push(`Kantapään paikka: neulo ${heelSide} silmukat (${H} s) erivärisellä liukkaalla apulangalla, siirrä ne takaisin vasemmalle puikolle ja neulo ne uudelleen sukkalangalla. Jatka suoraan eteenpäin; kantapää neulotaan lopuksi.`);
   }
 
   const gussetSteps=h.flap?[
-    `${change('heel','foot')||''} Neulo kantapään silmukat oikein. Poimi kantalapun reunasta <span class="k">${h.Pb} s</span> nostettujen reunasilmukoiden takareunoista${h.ex?` ja lisäksi ${h.ex} s kantalapun ja jalkapöydän välisestä kulmasta kiertäen (estää reiät), yhteensä ${h.P} s`:''}. Neulo jalkapöydän ${I} s. Poimi toisesta reunasta samoin <span class="k">${h.P2} s</span>. Neulo puolet kantapään silmukoista; kerros vaihtuu taas ${dpn?'takakeskellä':'kantapään keskeltä'}. Silmukoita on nyt ${h.T}.`.trim(),
+    `${change('heel','foot')||''} Neulo kantapään silmukat oikein. Poimi kantalapun reunasta <span class="k">${h.Pb} s</span> nostettujen reunasilmukoiden takareunoista${h.ex?` ja lisäksi ${h.ex} s kantalapun ja jalkapöydän välisestä kulmasta kiertäen (estää reiät), yhteensä ${h.P} s`:''}. Neulo jalkapöydän ${I} s. Poimi toisesta reunasta samoin <span class="k">${h.P2} s</span>. Neulo puolet kantapään silmukoista; ${dpn?'kerros vaihtuu taas takakeskellä':'kerros alkaa nyt kantapään keskeltä'}. Silmukoita on nyt ${h.T}.`.trim(),
     `Kiilakavennukset. Kavennuskerros: neulo kunnes ennen jalkapöydän silmukoita on 3 s, 2 o yhteen, 1 o; neulo jalkapöydän silmukat; 1 o, ylivetokavennus, neulo kerroksen loppuun. Neulo ${h.ev===2?'seuraava krs':h.ev-1+' krs'} ilman kavennuksia.${ex.length&&inW('foot')?' Jatka samalla raitakaaviota.':''}`,
-    `Toista näitä ${h.ev} kerrosta <span class="k">${h.decs} kertaa</span> (${h.gussetRounds} krs), kunnes silmukoita on taas ${N}${dpn?` (${N/4} s puikolla)`:''}.`
+    `Toista näitä ${h.ev} kerrosta <span class="k">${kertaa(h.decs)}</span> (${h.gussetRounds} krs), kunnes silmukoita on taas ${N}${dpn?` (${N/4} s puikolla)`:''}.`
   ]:[];
 
   const toeStepsCuff=[];
   if(t.type==='wedge'){
     toeStepsCuff.push(`${change('foot','toe')||''} Nauhakärki. Kavennuskerros: jalkapöydän puolen alussa 1 o, ylivetokavennus; neulo kunnes jalkapöydän puolella on jäljellä 3 s, 2 o yhteen, 1 o; tee pohjan puolella samoin (4 kavennusta).`.trim());
-    toeStepsCuff.push(`Kavenna joka 2. krs <span class="k">${t.r1} kertaa</span> (${N} → ${t.mid} s), sitten joka krs <span class="k">${t.r2} kertaa</span> (${t.mid} → ${t.final} s). Kärjen pituus n. ${fmt(t.len)} cm.`);
+    toeStepsCuff.push(`Kavenna ${vaiheet([['joka 2. krs',t.r1,` (${N} → ${t.mid} s)`],['joka krs',t.r2,` (${t.mid} → ${t.final} s)`]])}. Kärjen pituus n. ${fmt(t.len)} cm.`);
     toeStepsCuff.push(`Silmukoi jäljellä olevat ${t.final/2} + ${t.final/2} s yhteen (Kitchener-silmukointi).`);
   } else if(t.type==='novita'){
     toeStepsCuff.push(`${change('foot','toe')||''} Nauhakärki. Kavennuskerros: ${dpn?'puikon 1 lopussa 2 o yhteen, 1 o; puikon 2 alussa 1 o, ylivetokavennus; puikon 3 lopussa 2 o yhteen, 1 o; puikon 4 alussa 1 o, ylivetokavennus':'kummankin puolen alussa 1 o, ylivetokavennus ja lopussa 2 o yhteen, 1 o'} (4 kavennusta).`.trim());
-    toeStepsCuff.push(`Kavenna joka 2. krs <span class="k">${t.r1} kertaa</span>, kunnes silmukoita on ${t.mid}${dpn?` (${t.mid/4} s puikolla)`:''}, sitten joka krs <span class="k">${t.r2} kertaa</span>, kunnes jäljellä on ${t.final} s. Kärjen pituus n. ${fmt(t.len)} cm.`);
+    toeStepsCuff.push(`Kavenna ${vaiheet([['joka 2. krs',t.r1,`, kunnes silmukoita on ${t.mid}${dpn?` (${t.mid/4} s puikolla)`:''}`],['joka krs',t.r2,`, kunnes jäljellä on ${t.final} s`]])}. Kärjen pituus n. ${fmt(t.len)} cm.`);
     toeStepsCuff.push('Katkaise lanka, vedä se jäljellä olevien silmukoiden läpi, kiristä ja päättele nurjalle.');
   } else if(t.type==='star'){
     toeStepsCuff.push(`${change('foot','toe')||''} Tähtikärki. Jaa silmukat ${t.p} osaan, ${N/t.p} s kussakin (merkitse silmukkamerkeillä). Kavennuskerros: neulo jokaisen osan kaksi viimeistä silmukkaa oikein yhteen (${t.p} kavennusta).`.trim());
-    toeStepsCuff.push(`Kavenna joka 2. krs <span class="k">${t.r1} kertaa</span> (${N} → ${t.mid} s), sitten joka krs <span class="k">${t.r2} kertaa</span>, kunnes jäljellä on ${t.final} s. Kärjen pituus n. ${fmt(t.len)} cm.`);
+    toeStepsCuff.push(`Kavenna ${vaiheet([['joka 2. krs',t.r1,` (${N} → ${t.mid} s)`],['joka krs',t.r2,`, kunnes jäljellä on ${t.final} s`]])}. Kärjen pituus n. ${fmt(t.len)} cm.`);
     toeStepsCuff.push(`Katkaise lanka, pujota se jäljellä olevien silmukoiden läpi ja kiristä.`);
   } else {
-    toeStepsCuff.push(`${change('foot','toe')||''} Lyhennetty kärki: neulo jalkapöydän ${H} silmukalla lyhennetyt kerrokset samoin kuin tiimalasikantapäässä: lyhennä, kunnes keskellä on ${t.C} s, ja pidennä takaisin.`.trim());
-    toeStepsCuff.push(`Silmukoi lopuksi jalkapöydän ${H} s pohjan ${H} silmukkaan. Kärjen pituus n. ${fmt(t.len)} cm.`);
+    toeStepsCuff.push(`${change('foot','toe')||''} Lyhennetty kärki neulotaan edestakaisin jalkapöydän silmukoilla (${H} s); pohjan ${H} s odottavat.`.trim());
+    toeStepsCuff.push(...srSteps(H,t.C,t.rows));
+    toeStepsCuff.push(`Silmukoi lopuksi jalkapöydän ${H} s pohjan ${H} silmukkaan (Kitchener-silmukointi). Kärjen pituus n. ${fmt(t.len)} cm.`);
   }
   const afterHeelSteps=(r.heelType==='after')?[
     `${change('foot','heel')||''} Pura apulanka varovasti ja poimi sen alapuolelta ${H} s ja yläpuolelta ${H} s. Poimi kummastakin kulmasta lisäksi 1–2 s reikien estämiseksi ja kavenna ne pois ensimmäisellä kerroksella.`.trim(),
-    `Neulo kantapää kuten nauhakärki: kavenna 4 s joka 2. krs ${h.toe.r1} kertaa ja sitten joka krs ${h.toe.r2} kertaa, kunnes jäljellä on ${h.toe.final} s. Silmukoi ${h.toe.final/2} + ${h.toe.final/2} s yhteen.`
+    `Neulo kantapää kuten nauhakärki: kavenna 4 s ${vaiheet([['joka 2. krs',h.toe.r1,''],['joka krs',h.toe.r2,'']])}, kunnes jäljellä on ${h.toe.final} s. Silmukoi ${h.toe.final/2} + ${h.toe.final/2} s yhteen.`
   ]:[];
 
   if(s.dir==='cuff'){
     const cast=[`Luo <span class="k">${NL} s</span> ${CASTONS.cuff[s.castOn]||CASTONS.cuff.longtail} langalla ${yarnName(z.cuff)}. Jätä luontia varten häntää n. ${tail} cm.`,
-      `${dpn?`Jaa silmukat 4 puikolle (${NL/4} s kullekin)`:`Jaa silmukat kahdelle puolikkaalle (${NL/2} + ${NL/2} s)`} ja yhdistä suljetuksi neuleeksi niin, ettei luontireuna kierry.`,
+      `${dpn?`Jaa silmukat 4 puikolle (${NL/4} s kullekin) ja yhdistä`:s.needleType==='short'?'Yhdistä silmukat':`Jaa silmukat kahdelle puolikkaalle (${NL/2} + ${NL/2} s) ja yhdistä`} suljetuksi neuleeksi niin, ettei luontireuna kierry.`,
       `Neulo ${ribT} <span class="k">${r.cuffRows} krs</span> (${fmt(s.cuffLen)} cm).`];
     out.push({h:'Luonti ja resori',items:cast});
     const leg=[change('cuff','leg'),`Neulo ${legPatT}, kunnes työ on luontireunasta mitattuna <span class="k">${fmt(s.legLen)} cm</span> (resorin jälkeen n. ${r.legRows} krs).`];
-    if(r.shaping) leg.push(`Muotoilu: kavenna takakeskellä 2 s (2 o yhteen ennen keskikohtaa, ylivetokavennus sen jälkeen) joka ${r.shaping.every}. krs yhteensä ${r.shaping.D} kertaa, jolloin silmukoita on ${N}. Neulo viimeiset 2 cm ilman kavennuksia.`);
+    if(r.shaping) leg.push(`Muotoilu: kavenna takakeskellä 2 s (2 o yhteen ennen keskikohtaa, ylivetokavennus sen jälkeen) joka ${r.shaping.every}. krs yhteensä ${kertaa(r.shaping.D)}, jolloin silmukoita on ${N}. Neulo viimeiset 2 cm ilman kavennuksia.`);
     leg.push(stripeT('leg'),seqT('leg'));
     out.push({h:'Varsi',items:leg.filter(Boolean)});
     out.push({h:HEELS[r.heelType].fi.replace(/ \(.*\)/,''),items:heelSteps});
@@ -1397,20 +1409,21 @@ function buildInstructions(r){
     if(t.type==='wedge'||t.type==='novita'){
       toeUp.push(`Luo <span class="k">${t.final} s</span> ${CASTONS.toe[s.castOn]||CASTONS.toe.judy} langalla ${yarnName(z.toe)}: ${t.final/2} s jalkapöydän ja ${t.final/2} s pohjan puolelle. Neulo 1 krs.`);
       toeUp.push(`Lisäyskerros: kummankin puolen alussa 1 o, 1 lisäys (nosta silmukoiden välinen lanka ja neulo se kiertäen), neulo kunnes jäljellä on 1 s, 1 lisäys, 1 o (4 lisäystä).`);
-      toeUp.push(`Lisää joka krs <span class="k">${t.r2} kertaa</span> (${t.final} → ${t.mid} s) ja sitten joka 2. krs <span class="k">${t.r1} kertaa</span> (${t.mid} → ${N} s). Kärjen pituus n. ${fmt(t.len)} cm.`);
+      toeUp.push(`Lisää ${vaiheet([['joka krs',t.r2,` (${t.final} → ${t.mid} s)`],['joka 2. krs',t.r1,` (${t.mid} → ${N} s)`]])}. Kärjen pituus n. ${fmt(t.len)} cm.`);
     } else if(t.type==='star'){
       toeUp.push(`Luo <span class="k">${t.final} s</span> ympyräluonnilla (aloitus keskeltä) langalla ${yarnName(z.toe)} ja jaa ${t.p} osaan.`);
-      toeUp.push(`Lisää jokaisen osan lopussa 1 s joka krs ${t.r2} kertaa (${t.final} → ${t.mid} s) ja sitten joka 2. krs ${t.r1} kertaa (${t.mid} → ${N} s). Kärjen pituus n. ${fmt(t.len)} cm.`);
+      toeUp.push(`Lisää jokaisen osan lopussa 1 s ${vaiheet([['joka krs',t.r2,` (${t.final} → ${t.mid} s)`],['joka 2. krs',t.r1,` (${t.mid} → ${N} s)`]])}. Kärjen pituus n. ${fmt(t.len)} cm.`);
     } else {
-      toeUp.push(`Luo ${H} s väliaikaisella luonnilla langalla ${yarnName(z.toe)}. Neulo lyhennetyt kerrokset edestakaisin kuten tiimalasikantapäässä: lyhennä, kunnes keskellä on ${t.C} s, ja pidennä takaisin.`);
-      toeUp.push(`Pura väliaikainen luonti ja nosta sen ${H} s puikolle. Silmukoita on ${N}; jatka suljettuna neuleena.`);
+      toeUp.push(`Luo <span class="k">${H} s</span> väliaikaisella luonnilla langalla ${yarnName(z.toe)}. Kärki neulotaan näillä silmukoilla edestakaisin.`);
+      toeUp.push(...srSteps(H,t.C,t.rows));
+      toeUp.push(`Pura väliaikainen luonti ja nosta sen ${H} s puikolle. Silmukoita on ${N}; jatka suljettuna neuleena ja neulo ensimmäisellä kerroksella reunojen kietolangat silmukoiden kanssa yhteen.`);
     }
-    out.push({h:TOES[t.type]+' ja luonti',items:toeUp});
+    out.push({h:(t.type==='novita'?TOES.wedge:TOES[t.type])+' ja luonti',items:toeUp});
     const foot=[change('toe','foot'),`Neulo ${footPatT}, kunnes jalkaterä on kärjestä mitattuna <span class="k">${fmt(r.footLenSock-h.depth)} cm</span> (n. ${r.footRounds} krs kärjen jälkeen). Kantapää vie vielä n. ${fmt(h.depth)} cm.`,stripeT('foot'),seqT('foot')];
     out.push({h:'Jalkaterä',items:foot.filter(Boolean)});
     out.push({h:HEELS[r.heelType].fi.replace(/ \(.*\)/,''),items:heelSteps});
     const leg=[change('heel','leg'),`Neulo ${legPatT}, kunnes varsi on kantapäästä mitattuna <span class="k">${fmt(s.legLen-s.cuffLen)} cm</span> (n. ${r.legRows} krs).`];
-    if(r.shaping) leg.push(`Muotoilu: lisää takakeskellä 2 s joka ${r.shaping.every}. krs yhteensä ${r.shaping.D} kertaa, kunnes silmukoita on ${NL}. Aloita lisäykset 2 cm kantapään jälkeen.`);
+    if(r.shaping) leg.push(`Muotoilu: lisää takakeskellä 2 s joka ${r.shaping.every}. krs yhteensä ${kertaa(r.shaping.D)}, kunnes silmukoita on ${NL}. Aloita lisäykset 2 cm kantapään jälkeen.`);
     leg.push(stripeT('leg'),seqT('leg'));
     out.push({h:'Varsi',items:leg.filter(Boolean)});
     out.push({h:'Resori ja päättely',items:[change('leg','cuff'),`Neulo ${ribT} <span class="k">${r.cuffRows} krs</span> (${fmt(s.cuffLen)} cm).`,'Päättele joustavasti, esimerkiksi Jenyn joustavalla päättelyllä tai silmukoimalla. Tavallinen päättely jää usein liian kireäksi.'].filter(Boolean)});
@@ -1826,31 +1839,47 @@ function makeTextures(r,rows){
   const up=r.s.dir==='cuff'; // silmukan kärki osoittaa luontireunaa kohti
   const rib=r.rib;
   const backFrom=Math.floor(N/4), backTo=Math.floor(3*N/4);
+  const rot=up?0.5:-0.5;
+  // Kukin silmukkatyyppi ja väri piirretään kerran omaan leimaansa, joka kopioidaan paikalleen.
+  // Lopputulos on sama kuin piirrettäessä joka silmukka erikseen, mutta moninkertaisesti nopeampi.
+  // Reunus, koska silmukan ellipsit ulottuvat hieman ruudun ulkopuolelle.
+  const pad=Math.ceil(Math.max(cw,rh)*0.4)+1;
+  const stamps=new Map();
+  const stamp=(key,draw)=>{ let st=stamps.get(key); if(!st){ st=document.createElement('canvas'); st.width=cw+2*pad; st.height=rh+2*pad; draw(st.getContext('2d'),pad,pad); stamps.set(key,st); } return st; };
+  const drawColor=(hex,kind)=>(x,x0,y0)=>{
+    x.fillStyle=shade(hex,-0.42); x.fillRect(x0,y0,cw,rh);
+    if(kind==='purl'){
+      x.fillStyle=shade(hex,-0.12); x.beginPath(); x.ellipse(x0+cw/2,y0+rh*0.5,cw*0.52,rh*0.36,0,0,Math.PI*2); x.fill();
+      x.fillStyle=shade(hex,0.12); x.beginPath(); x.ellipse(x0+cw/2,y0+rh*0.42,cw*0.34,rh*0.16,0,0,Math.PI*2); x.fill();
+    } else {
+      const slip=kind==='slip';
+      const base=slip?shade(hex,0.06):hex;
+      for(const side of [-1,1]){
+        const cx=x0+cw*(0.5+side*0.22), cy=y0+rh*0.5;
+        x.fillStyle=base; x.beginPath(); x.ellipse(cx,cy,cw*0.24,rh*(slip?0.72:0.62),side*-rot,0,Math.PI*2); x.fill();
+        x.fillStyle=shade(base,0.16); x.beginPath(); x.ellipse(cx-side*cw*0.03,cy-rh*0.06*(up?1:-1),cw*0.1,rh*0.32,side*-rot,0,Math.PI*2); x.fill();
+      }
+    }
+  };
+  const drawBump=kind=>(bx,x0,y0)=>{
+    if(kind==='purl'){ bx.fillStyle='#8a8a8a'; bx.beginPath(); bx.ellipse(x0+cw/2,y0+rh*0.5,cw*0.5,rh*0.34,0,0,Math.PI*2); bx.fill(); return; }
+    for(const side of [-1,1]){
+      const cx=x0+cw*(0.5+side*0.22), cy=y0+rh*0.5;
+      bx.fillStyle='#a0a0a0'; bx.beginPath(); bx.ellipse(cx,cy,cw*0.24,rh*0.62,side*-rot,0,Math.PI*2); bx.fill();
+      bx.fillStyle='#e0e0e0'; bx.beginPath(); bx.ellipse(cx,cy,cw*0.12,rh*0.36,side*-rot,0,Math.PI*2); bx.fill();
+    }
+  };
   for(let row=0;row<nR;row++){
     const rw=rows[row]; const y0=row*rh;
     for(let col=0;col<N;col++){
       const back=col>=backFrom&&col<backTo;
-      const yi=back?rw.b:rw.f; const tex=back?rw.tb:rw.tf;
+      const tex=back?rw.tb:rw.tf;
       const hex=stitchHex(r,rw,row,col,N);
       const x0=col*cw;
-      const purl=tex==='rib'&&!rib.pat[col%rib.rep];
-      x.fillStyle=shade(hex,-0.42); x.fillRect(x0,y0,cw,rh);
-      if(purl){
-        x.fillStyle=shade(hex,-0.12); x.beginPath(); x.ellipse(x0+cw/2,y0+rh*0.5,cw*0.52,rh*0.36,0,0,Math.PI*2); x.fill();
-        x.fillStyle=shade(hex,0.12); x.beginPath(); x.ellipse(x0+cw/2,y0+rh*0.42,cw*0.34,rh*0.16,0,0,Math.PI*2); x.fill();
-        bx.fillStyle='#8a8a8a'; bx.beginPath(); bx.ellipse(x0+cw/2,y0+rh*0.5,cw*0.5,rh*0.34,0,0,Math.PI*2); bx.fill();
-      } else {
-        const slip=tex==='slip'&&(col%2===1);
-        const base=slip?shade(hex,0.06):hex;
-        const rot=up?0.5:-0.5;
-        for(const side of [-1,1]){
-          const cx=x0+cw*(0.5+side*0.22), cy=y0+rh*0.5;
-          x.fillStyle=base; x.beginPath(); x.ellipse(cx,cy,cw*0.24,rh*(slip?0.72:0.62),side*-rot,0,Math.PI*2); x.fill();
-          x.fillStyle=shade(base,0.16); x.beginPath(); x.ellipse(cx-side*cw*0.03,cy-rh*0.06*(up?1:-1),cw*0.1,rh*0.32,side*-rot,0,Math.PI*2); x.fill();
-          bx.fillStyle='#a0a0a0'; bx.beginPath(); bx.ellipse(cx,cy,cw*0.24,rh*0.62,side*-rot,0,Math.PI*2); bx.fill();
-          bx.fillStyle='#e0e0e0'; bx.beginPath(); bx.ellipse(cx,cy,cw*0.12,rh*0.36,side*-rot,0,Math.PI*2); bx.fill();
-        }
-      }
+      const kind=(tex==='rib'&&!rib.pat[col%rib.rep])?'purl':(tex==='slip'&&col%2===1)?'slip':'knit';
+      const bk=kind==='purl'?'purl':'knit';
+      x.drawImage(stamp(hex+kind,drawColor(hex,kind)),x0-pad,y0-pad);
+      bx.drawImage(stamp('bump-'+bk,drawBump(bk)),x0-pad,y0-pad);
     }
   }
   return {c,bc};
