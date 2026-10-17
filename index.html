@@ -23,7 +23,8 @@
 <script>try{ var th=localStorage.getItem('sukkasimulaattori-v2-theme'); if(th==='light'||th==='dark') document.documentElement.dataset.theme=th; }catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,0..100&family=Geist:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,0..100&family=Geist:wght@400..700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,0..100&family=Geist:wght@400..700&display=swap"></noscript>
 <style>
 /* Layout: leveällä näytöllä säädöt vasemmalla (oma vieritys) ja oikealla sukka 2D/3D, tunnusluvut ja välilehdet.
    Puhelimessa sovellusmainen näkymä: alapalkki (Suunnittele / Ohje / Laskelmat), sukka pysyy ylhäällä säätöjä muutettaessa. */
@@ -121,7 +122,8 @@ details.sec[open]>summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
 .f.wide{grid-column:1/-1}
 .f>label,.lbl{font-size:12.5px;color:var(--muted);font-weight:500;line-height:1.3}
 input[type=number],input[type=text],input[type=url],select{width:100%;font:inherit;font-size:15px;color:var(--ink);background-color:var(--surface-2);border:1px solid transparent;border-radius:var(--r-ctl);padding:9px 12px;min-height:44px;transition:border-color .15s,background-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
-input[type=number]{font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+input[type=number],input[data-type=num]{font-variant-numeric:tabular-nums}
+input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input::placeholder{color:var(--muted);opacity:.7}
 select{padding-right:34px;text-overflow:ellipsis;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238B847A' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:15px}
@@ -252,6 +254,7 @@ ol.steps,ul.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction
 .stepchk .tx{min-width:0;transition:opacity .2s}
 .stepchk:has(input:checked) .no{background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center/15px no-repeat;box-shadow:none;color:transparent}
 .stepchk:has(input:checked) .tx{opacity:.5}
+.stepchk.flash{background:var(--accent-soft)}
 .num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
 .k{font-family:var(--f-num);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
 .tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -331,6 +334,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
   .ohje-bar{flex-wrap:nowrap}
   .ohje-bar .row{flex-wrap:nowrap}
   .ohje-bar .btn .lbl,.ohje-bar .prog .lbl{display:none}
+  .ohje-bar .prog .track{position:absolute;left:18px;right:18px;bottom:0;max-width:none;height:3px}
   .ohje-bar .btn{width:40px;padding:0}
   .stepchk{padding:10px 8px;margin:0 -8px}
   table.subst thead{display:none}
@@ -383,6 +387,8 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6A2.5 2.5 0 0 0 13 3.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
   <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1v.1h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M7 5.5l5 5 5-5M7 12.5l5 5 5-5"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M8 7.5l4-4 4 4"/><path d="M5.5 11.5v7a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-7"/></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></symbol>
 </svg>
 
@@ -454,13 +460,13 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
               <label for="shoe">Kenkäkoko (EU) – täyttää mitat valmiiksi</label>
               <select id="shoe"></select>
             </div>
-            <div class="f"><label for="footLen">Jalan pituus</label><div class="unit"><input id="footLen" data-k="footLen" type="number" step="0.1" min="8" max="35"><span>cm</span></div></div>
-            <div class="f"><label for="footCirc">Jalkaterän ympärys</label><div class="unit"><input id="footCirc" data-k="footCirc" type="number" step="0.1" min="8" max="35"><span>cm</span></div></div>
-            <div class="f"><label for="legCirc">Varren yläosan ympärys</label><div class="unit"><input id="legCirc" data-k="legCirc" type="number" step="0.1" min="8" max="50"><span>cm</span></div></div>
-            <div class="f"><label for="legLen">Varren pituus</label><div class="unit"><input id="legLen" data-k="legLen" type="number" step="0.5" min="2" max="60"><span>cm</span></div></div>
-            <div class="f"><label for="cuffLen">Resorin pituus</label><div class="unit"><input id="cuffLen" data-k="cuffLen" type="number" step="0.5" min="0.5" max="30"><span>cm</span></div></div>
-            <div class="f"><label for="lenEase">Pituusjousto</label><div class="unit"><input id="lenEase" data-k="lenEase" type="number" step="0.5" min="-3" max="2"><span>cm</span></div></div>
-            <div class="f"><label for="ease">Leveysjousto (− = väljempi)</label><div class="unit"><input id="ease" data-k="ease" type="number" step="1" min="-20" max="25"><span>%</span></div></div>
+            <div class="f"><label for="footLen">Jalan pituus</label><div class="unit"><input id="footLen" data-k="footLen" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.1" min="8" max="35"><span>cm</span></div></div>
+            <div class="f"><label for="footCirc">Jalkaterän ympärys</label><div class="unit"><input id="footCirc" data-k="footCirc" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.1" min="8" max="35"><span>cm</span></div></div>
+            <div class="f"><label for="legCirc">Varren yläosan ympärys</label><div class="unit"><input id="legCirc" data-k="legCirc" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.1" min="8" max="50"><span>cm</span></div></div>
+            <div class="f"><label for="legLen">Varren pituus</label><div class="unit"><input id="legLen" data-k="legLen" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.5" min="2" max="60"><span>cm</span></div></div>
+            <div class="f"><label for="cuffLen">Resorin pituus</label><div class="unit"><input id="cuffLen" data-k="cuffLen" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.5" min="0.5" max="30"><span>cm</span></div></div>
+            <div class="f"><label for="lenEase">Pituusjousto</label><div class="unit"><input id="lenEase" data-k="lenEase" data-type="num" type="text" autocomplete="off" step="0.5" min="-3" max="2"><span>cm</span></div></div>
+            <div class="f"><label for="ease">Leveysjousto (− = väljempi)</label><div class="unit"><input id="ease" data-k="ease" data-type="num" type="text" autocomplete="off" step="1" min="-20" max="25"><span>%</span></div></div>
             <div class="f"><label for="pair">Määrä</label><select id="pair" data-k="pair" data-type="bool"><option value="true">Pari (2 sukkaa)</option><option value="false">Yksi sukka</option></select></div>
           </div>
           <details>
@@ -485,8 +491,8 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
           </div>
           <label class="check"><input type="checkbox" id="useSwatch" data-k="useSwatch" data-type="check"> Käytä omaa mallitilkkua</label>
           <div class="fields" id="swatchFields">
-            <div class="f"><label for="swSts">Silmukat / 10 cm</label><input id="swSts" data-k="swSts" data-type="num" type="number" step="0.5" min="8" max="50"></div>
-            <div class="f"><label for="swRows">Kerrokset / 10 cm</label><input id="swRows" data-k="swRows" data-type="num" type="number" step="0.5" min="8" max="70"></div>
+            <div class="f"><label for="swSts">Silmukat / 10 cm</label><input id="swSts" data-k="swSts" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.5" min="8" max="50"></div>
+            <div class="f"><label for="swRows">Kerrokset / 10 cm</label><input id="swRows" data-k="swRows" data-type="num" type="text" inputmode="decimal" autocomplete="off" step="0.5" min="8" max="70"></div>
           </div>
           <p class="help" id="gaugeHelp"></p>
         </div>
@@ -529,7 +535,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
                 <option value="2">Joka 2. krs</option>
                 <option value="3">Joka 3. krs</option>
               </select></div>
-            <div class="f" id="gExtraF"><label for="gussetExtra">Lisäsilmukat kiilan kulmiin</label><div class="unit"><input id="gussetExtra" data-k="gussetExtra" data-type="num" type="number" min="0" max="4" step="1"><span>s/puoli</span></div></div>
+            <div class="f" id="gExtraF"><label for="gussetExtra">Lisäsilmukat kiilan kulmiin</label><div class="unit"><input id="gussetExtra" data-k="gussetExtra" data-type="num" type="text" inputmode="numeric" autocomplete="off" min="0" max="4" step="1"><span>s/puoli</span></div></div>
             <div class="f"><label for="toe">Kärki</label>
               <select id="toe" data-k="toe">
                 <option value="wedge">Nauhakärki, silmukoiden</option>
@@ -537,7 +543,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
                 <option value="star">Tähtikärki</option>
                 <option value="short">Lyhennetyt kerrokset</option>
               </select></div>
-            <div class="f"><label for="margin">Lankaa varalle</label><div class="unit"><input id="margin" data-k="margin" data-type="num" type="number" step="5" min="0" max="50"><span>%</span></div></div>
+            <div class="f"><label for="margin">Lankaa varalle</label><div class="unit"><input id="margin" data-k="margin" data-type="num" type="text" inputmode="numeric" autocomplete="off" step="5" min="0" max="50"><span>%</span></div></div>
           </div>
         </div>
       </details>
@@ -569,8 +575,8 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
           </div>
           <div class="fields" id="stripeFields">
             <div class="f wide"><label for="stYarn">Raitalanka</label><select id="stYarn" data-k="stripes.yarn" data-type="num"></select></div>
-            <div class="f"><label for="stA">Pohjaväriä</label><div class="unit"><input id="stA" data-k="stripes.a" data-type="num" type="number" min="1" max="40"><span>krs</span></div></div>
-            <div class="f"><label for="stB">Raitaväriä</label><div class="unit"><input id="stB" data-k="stripes.b" data-type="num" type="number" min="1" max="40"><span>krs</span></div></div>
+            <div class="f"><label for="stA">Pohjaväriä</label><div class="unit"><input id="stA" data-k="stripes.a" data-type="num" type="text" inputmode="numeric" autocomplete="off" min="1" max="40"><span>krs</span></div></div>
+            <div class="f"><label for="stB">Raitaväriä</label><div class="unit"><input id="stB" data-k="stripes.b" data-type="num" type="text" inputmode="numeric" autocomplete="off" min="1" max="40"><span>krs</span></div></div>
           </div>
           <div id="seqEditor" class="seq">
             <p class="help">Raidat toistuvat järjestyksessä alhaalta ylös luettuna kuten kaaviossa. Pohjaväri on varren lanka. ”Väli” lisää pohjaväriä raidan eteen.</p>
@@ -610,7 +616,7 @@ td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular
   <button type="button" data-screen="calc" aria-current="false"><svg class="ic"><use href="#i-calc"/></svg><span>Laskelmat</span></button>
 </nav>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onload="window.onThreeLoad&&onThreeLoad()" onerror="window.threeFailed=true;window.onThreeError&&onThreeError()"></script>
 
 <script id="core">
 "use strict";
@@ -959,6 +965,9 @@ function colorFromUrl(url){
 const $=(q,el=document)=>el.querySelector(q);
 const $$=(q,el=document)=>[...el.querySelectorAll(q)];
 const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Numerokentät näytetään desimaalipilkulla; syötteessä kelpaa sekä pilkku että piste.
+const fmtIn=v=>(v==null||v==='')?'':String(v).replace('.',',');
+const parseIn=v=>parseFloat(String(v).replace(',','.'));
 const STORE='sukkasimulaattori-v2';
 
 function fromDB(id,extra){ const d=DB.find(x=>x.id===id); const y=JSON.parse(JSON.stringify(d)); delete y.keys; delete y.group; return Object.assign({dbId:id,url:'',color:'#2E4A6B',colorName:'',colorType:y.colorType||'solid',palette:['#2E4A6B','#C49A2A','#D8CBB0','#A8243B'],stripeRows:6,status:''},y,extra||{}); }
@@ -1009,7 +1018,7 @@ function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ try{ const 
   for(const n of STD_NEEDLES){ const o=document.createElement('option'); o.value=n; o.textContent=mm(n); nd.appendChild(o); }
   const ps=$('#presetSel'); for(const [k,v] of Object.entries(PRESETS)){ const o=document.createElement('option'); o.value=k; o.textContent=v.name; ps.appendChild(o); }
   // −/+ -painikkeet numerokenttiin (helpompi säätää puhelimella)
-  for(const inp of $$('.controls .unit > input[type=number][data-k]')){
+  for(const inp of $$('.controls .unit > input[data-k]')){
     const u=inp.parentElement; u.classList.add('stepper'); const nm=(($(`label[for="${inp.id}"]`)||{}).textContent||'').trim();
     const mk=(d,t,l)=>{ const b=document.createElement('button'); b.type='button'; b.className='step'; b.dataset.step=d; b.textContent=t; b.setAttribute('aria-label',`${l}: ${nm}`); return b; };
     u.prepend(mk(-1,'−','Vähennä')); u.append(mk(1,'+','Lisää'));
@@ -1017,8 +1026,11 @@ function save(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ try{ const 
 })();
 document.addEventListener('click',e=>{
   const b=e.target.closest('.stepper .step'); if(!b) return; const inp=$('input',b.parentElement);
-  if(inp.value==='') inp.value=inp.min||0;
-  try{ +b.dataset.step>0?inp.stepUp():inp.stepDown(); }catch(err){ return; }
+  const st=parseFloat(inp.getAttribute('step'))||1, mn=parseFloat(inp.getAttribute('min')), mx=parseFloat(inp.getAttribute('max'));
+  let v=parseIn(inp.value); if(!isFinite(v)) v=isFinite(mn)?mn:0;
+  v=Math.round((v+(+b.dataset.step)*st)/st)*st;
+  if(isFinite(mn)) v=Math.max(mn,v); if(isFinite(mx)) v=Math.min(mx,v);
+  inp.value=fmtIn(+v.toFixed(4));
   inp.dispatchEvent(new Event('input',{bubbles:true}));
 });
 const CASTON_LABELS={longtail:'Ristiinluonti (perusluonti)',german:'Kierretty ristiinluonti (joustava)',italian:'Italialainen luonti (joustimelle)',judy:'Judyn taikaluonti',turkish:'Turkkilainen luonti'};
@@ -1038,7 +1050,7 @@ function syncInputs(){
   $('#shoe').value=S.shoe;
   for(const el of $$('[data-k]')){
     const v=getPath(S,el.dataset.k);
-    if(el.type==='checkbox') el.checked=!!v; else el.value=(v===undefined||v===null)?'':String(v);
+    if(el.type==='checkbox') el.checked=!!v; else el.value=(v===undefined||v===null)?'':(el.tagName==='INPUT'&&typeof v==='number'?fmtIn(v):String(v));
   }
   $('#dirCuff').setAttribute('aria-pressed',S.dir==='cuff'); $('#dirToe').setAttribute('aria-pressed',S.dir==='toe');
   fillHeelOptions();
@@ -1111,7 +1123,7 @@ document.addEventListener('input',e=>{
     let v;
     if(el.dataset.type==='check') v=el.checked;
     else if(el.dataset.type==='bool') v=el.value==='true';
-    else if(el.type==='number'||el.dataset.type==='num'){ v=parseFloat(String(el.value).replace(',','.')); if(!isFinite(v)) return; }
+    else if(el.type==='number'||el.dataset.type==='num'){ v=parseIn(el.value); if(!isFinite(v)) return; }
     else v=el.value;
     setPath(S,el.dataset.k,v);
     if(['legPat','heel','useSwatch','stripes.mode'].includes(el.dataset.k)) syncInputs();
@@ -1156,14 +1168,14 @@ function renderYarns(openIdx){
           <div class="f"><label for="y${i}-brand">Merkki</label><input type="text" id="y${i}-brand" data-y="brand" value="${esc(y.brand)}"></div>
           <div class="f"><label for="y${i}-name">Lanka</label><input type="text" id="y${i}-name" data-y="name" value="${esc(y.name)}"></div>
           <div class="f wide"><label for="y${i}-fiber">Koostumus</label><input type="text" id="y${i}-fiber" data-y="fiber" value="${esc(y.fiber)}"></div>
-          <div class="f"><label for="y${i}-grams">Kerän paino</label><div class="unit"><input type="number" id="y${i}-grams" data-y="grams" data-type="num" step="1" value="${esc(y.grams)}"><span>g</span></div></div>
-          <div class="f"><label for="y${i}-meters">Kerän pituus</label><div class="unit"><input type="number" id="y${i}-meters" data-y="meters" data-type="num" step="1" value="${esc(y.meters)}"><span>m</span></div></div>
-          <div class="f"><label for="y${i}-nmin">Puikot vyötteessä, min</label><div class="unit"><input type="number" id="y${i}-nmin" data-y="needleMin" data-type="num" step="0.25" value="${esc(y.needleMin)}"><span>mm</span></div></div>
-          <div class="f"><label for="y${i}-nmax">max</label><div class="unit"><input type="number" id="y${i}-nmax" data-y="needleMax" data-type="num" step="0.25" value="${esc(y.needleMax)}"><span>mm</span></div></div>
-          <div class="f"><label for="y${i}-sts">Vyötteen tiheys, s</label><div class="unit"><input type="number" id="y${i}-sts" data-y="sts" data-type="num" step="0.5" value="${esc(y.sts)}"><span>/10</span></div></div>
-          <div class="f"><label for="y${i}-rows">krs</label><div class="unit"><input type="number" id="y${i}-rows" data-y="rows" data-type="num" step="0.5" value="${esc(y.rows??'')}" placeholder="arvio"><span>/10</span></div></div>
-          <div class="f"><label for="y${i}-gn">Tiheys puikoilla</label><div class="unit"><input type="number" id="y${i}-gn" data-y="gaugeNeedle" data-type="num" step="0.25" value="${esc(y.gaugeNeedle??'')}"><span>mm</span></div></div>
-          <div class="f"><label for="y${i}-sn">Sukkiin suositus</label><div class="unit"><input type="number" id="y${i}-sn" data-y="sockNeedle" data-type="num" step="0.25" value="${esc(y.sockNeedle??'')}" placeholder="${fmt(sockNeedle(y),2)}"><span>mm</span></div></div>
+          <div class="f"><label for="y${i}-grams">Kerän paino</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-grams" data-y="grams" data-type="num" step="1" value="${esc(fmtIn(y.grams))}"><span>g</span></div></div>
+          <div class="f"><label for="y${i}-meters">Kerän pituus</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-meters" data-y="meters" data-type="num" step="1" value="${esc(fmtIn(y.meters))}"><span>m</span></div></div>
+          <div class="f"><label for="y${i}-nmin">Puikot vyötteessä, min</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-nmin" data-y="needleMin" data-type="num" step="0.25" value="${esc(fmtIn(y.needleMin))}"><span>mm</span></div></div>
+          <div class="f"><label for="y${i}-nmax">max</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-nmax" data-y="needleMax" data-type="num" step="0.25" value="${esc(fmtIn(y.needleMax))}"><span>mm</span></div></div>
+          <div class="f"><label for="y${i}-sts">Vyötteen tiheys, s</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-sts" data-y="sts" data-type="num" step="0.5" value="${esc(fmtIn(y.sts))}"><span>/10</span></div></div>
+          <div class="f"><label for="y${i}-rows">krs</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-rows" data-y="rows" data-type="num" step="0.5" value="${esc(fmtIn(y.rows??''))}" placeholder="arvio"><span>/10</span></div></div>
+          <div class="f"><label for="y${i}-gn">Tiheys puikoilla</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-gn" data-y="gaugeNeedle" data-type="num" step="0.25" value="${esc(fmtIn(y.gaugeNeedle??''))}"><span>mm</span></div></div>
+          <div class="f"><label for="y${i}-sn">Sukkiin suositus</label><div class="unit"><input type="text" inputmode="decimal" autocomplete="off" id="y${i}-sn" data-y="sockNeedle" data-type="num" step="0.25" value="${esc(fmtIn(y.sockNeedle??''))}" placeholder="${fmt(sockNeedle(y),2)}"><span>mm</span></div></div>
         </div>
         <div class="fields">
           <div class="f"><label for="y${i}-ctype">Värjäys</label><select id="y${i}-ctype" data-y="colorType">
@@ -1174,7 +1186,7 @@ function renderYarns(openIdx){
           <div class="f"><label for="y${i}-cname">Värin nimi</label><input type="text" id="y${i}-cname" data-y="colorName" value="${esc(y.colorName)}"></div>
           <div class="f wide"><span class="lbl">${y.colorType==='solid'?'Väri':(y.colorType==='glitter'?'Pohjaväri ja kimalle':'Värit (1–4)')}</span>
             <div class="palette">${y.colorType==='solid'?`<input type="color" id="y${i}-color" data-y="color" value="${esc(y.color)}" aria-label="Väri">`:y.colorType==='glitter'?`<input type="color" id="y${i}-color" data-y="color" value="${esc(y.color)}" aria-label="Pohjaväri"><input type="color" id="y${i}-pal1" data-pal="1" value="${esc((y.palette||[])[1]||'#A9B0BA')}" aria-label="Kimalteen väri">`:(y.palette||[]).map((c,j)=>`<input type="color" id="y${i}-pal${j}" data-pal="${j}" value="${esc(c)}" aria-label="Väri ${j+1}">`).join('')}
-            ${y.colorType==='striping'?`<div class="unit" style="width:110px"><input type="number" id="y${i}-srows" data-y="stripeRows" data-type="num" min="1" max="60" value="${esc(y.stripeRows)}" aria-label="Raidan korkeus"><span>krs</span></div>`:''}</div></div>
+            ${y.colorType==='striping'?`<div class="unit" style="width:110px"><input type="text" inputmode="numeric" autocomplete="off" id="y${i}-srows" data-y="stripeRows" data-type="num" min="1" max="60" value="${esc(fmtIn(y.stripeRows))}" aria-label="Raidan korkeus"><span>krs</span></div>`:''}</div></div>
         </div>
         <div class="row"><span class="help">${m?`${esc(weightClass(m).fi)} · sukkapuikko n. ${mm(sockNeedle(y))}`:'Täytä kerän paino ja pituus.'}</span>
         ${S.yarns.length>1?`<button type="button" class="btn small ghost" data-act="remove" style="margin-left:auto">Poista lanka</button>`:''}</div>
@@ -1451,8 +1463,10 @@ function renderOhje(){
       <div class="prog" id="ohjeProg"></div>
       <div class="row">
         ${'wakeLock' in navigator?`<button class="btn small${wakeOn?' on':''}" type="button" id="wakeBtn" aria-pressed="${wakeOn}" title="Pidä näyttö päällä neuloessa"><svg class="ic"><use href="#i-bulb"/></svg><span class="lbl">Näyttö päällä</span></button>`:''}
+        <button class="btn small" type="button" id="nextBtn" title="Siirry ensimmäiseen tekemättömään vaiheeseen" hidden><svg class="ic"><use href="#i-next"/></svg><span class="lbl">Jatka</span></button>
         <button class="btn small" type="button" id="copyBtn" title="Kopioi ohje"><svg class="ic"><use href="#i-copy"/></svg><span class="lbl">Kopioi ohje</span></button>
-        ${downloadsNS?'<button class="btn small" type="button" id="dlBtn" title="Tallenna tekstitiedostona"><svg class="ic"><use href="#i-download"/></svg><span class="lbl">Tallenna</span></button>':''}
+        ${navigator.share?'<button class="btn small" type="button" id="shareBtn" title="Jaa ohje"><svg class="ic"><use href="#i-share"/></svg><span class="lbl">Jaa</span></button>':''}
+        ${downloadsNS||!navigator.share?'<button class="btn small" type="button" id="dlBtn" title="Tallenna tekstitiedostona"><svg class="ic"><use href="#i-download"/></svg><span class="lbl">Tallenna</span></button>':''}
         <button class="btn small ghost" type="button" id="resetDone" title="Tyhjennä merkinnät"><svg class="ic"><use href="#i-reset"/></svg><span class="lbl">Tyhjennä</span></button>
       </div>
     </div>
@@ -1464,6 +1478,7 @@ function renderOhje(){
 function updateProgress(){
   const boxes=$$('#p-ohje [data-done]'); const n=boxes.filter(b=>b.checked).length;
   for(const s of $$('#p-ohje .osa')){ const b=$$('[data-done]',s); s.classList.toggle('valmis',b.length>0&&b.every(x=>x.checked)); }
+  const nb=$('#nextBtn'); if(nb) nb.hidden=!(n>0&&n<boxes.length);
   const el=$('#ohjeProg'); if(el) el.innerHTML=`<span>${n} / ${boxes.length} <span class="lbl">vaihetta </span>tehty</span><span class="track"><i style="width:${boxes.length?(n/boxes.length*100).toFixed(1):0}%"></i></span>`;
 }
 function saveDone(){ try{ localStorage.setItem(STORE+'-done',JSON.stringify([...doneSet])); }catch(e){} }
@@ -1485,9 +1500,24 @@ document.addEventListener('click',async e=>{
     try{ await navigator.clipboard.writeText(txt); $('#copyStatus').textContent='Kopioitu leikepöydälle.'; }
     catch(err){ $('#copyFallback').innerHTML=`<textarea class="copyarea" id="copyArea" readonly aria-label="Ohjeen teksti"></textarea>`; const ta=$('#copyArea'); ta.value=txt; ta.focus(); ta.select(); $('#copyStatus').textContent='Kopioi valittu teksti (Ctrl/Cmd + C).'; }
   }
-  if(t.id==='dlBtn'&&downloadsNS){
-    try{ await downloadsNS.save({filename:`sukkaohje-EU${S.shoe}.txt`,data:instructionsText(R)}); $('#copyStatus').textContent='Tallennettu.'; }
-    catch(err){ $('#copyStatus').textContent=err&&err.code==='declined'?'Tallennus peruttiin.':'Tallennus ei onnistunut tässä näkymässä.'; }
+  if(t.id==='dlBtn'){
+    const name=`sukkaohje-EU${S.shoe}.txt`, txt=instructionsText(R);
+    if(downloadsNS){
+      try{ await downloadsNS.save({filename:name,data:txt}); $('#copyStatus').textContent='Tallennettu.'; }
+      catch(err){ $('#copyStatus').textContent=err&&err.code==='declined'?'Tallennus peruttiin.':'Tallennus ei onnistunut tässä näkymässä.'; }
+    } else {
+      const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'})); a.download=name;
+      document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+    }
+  }
+  if(t.id==='shareBtn'){
+    try{ await navigator.share({title:'Sukkaohje',text:instructionsText(R)}); }
+    catch(err){ if(!err||err.name!=='AbortError') $('#copyStatus').textContent='Jakaminen ei onnistunut. Kokeile Kopioi-painiketta.'; }
+  }
+  if(t.id==='nextBtn'){
+    const b=$$('#p-ohje [data-done]').find(x=>!x.checked); if(!b) return;
+    const row=b.closest('.stepchk'); row.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'),1600);
   }
   if(t.id==='wakeBtn') setWake(!(wantWake&&wakeLock));
   if(t.id==='resetDone'){
@@ -1817,9 +1847,11 @@ function req3D(){ if(!T3) return; T3.needs=true; if(!rafOn){ rafOn=true; request
 // Ei piirretä, kun esikatselu ei näy (säästää akkua puhelimessa).
 let viewVisible=true;
 if('IntersectionObserver' in window) new IntersectionObserver(es=>{ viewVisible=es[es.length-1].isIntersecting; if(viewVisible) req3D(); }).observe($('#view'));
-function loop3D(){
-  rafOn=false; if(!T3||$('#v3dWrap').hidden||!viewVisible) return;
-  if(autoRot){ camState.yaw+=0.006; T3.needs=true; }
+let lastFrame=0;
+function loop3D(now){
+  rafOn=false; if(!T3||$('#v3dWrap').hidden||!viewVisible){ lastFrame=0; return; }
+  // pyörimisnopeus sidottu aikaan, ei ruudunpäivitystaajuuteen (120 Hz -näytöllä pyöri ennen tuplanopeudella)
+  if(autoRot){ const dt=lastFrame?Math.min(0.1,(now-lastFrame)/1000):1/60; lastFrame=now; camState.yaw+=0.36*dt; T3.needs=true; } else lastFrame=0;
   if(T3.needs){ T3.needs=false; T3.pivot.rotation.set(camState.pitch,camState.yaw,0,'XYZ');
     const fov=T3.camera.fov*Math.PI/180; const pad=T3.renderer.domElement.clientHeight<520?1.22:1.08; // tilaa painikkeille
     const fit=pad*T3.size*0.62/Math.tan(fov/2)/Math.min(1,T3.camera.aspect*1.05);
@@ -1884,10 +1916,15 @@ function makeTextures(r,rows){
   }
   return {c,bc};
 }
+let built3D='';
 function build3D(){
   if(!init3D()) return false;
   if(!R) return true;
   const rows=buildRows(R); const sh=buildShape(R);
+  // Rakennetaan uudelleen vain, jos sukan muoto tai pinta muuttui; esim. lankavara, puikkotyyppi tai langan nimi eivät muuta sitä.
+  const sig=JSON.stringify([rows,sh.rings,R.N,R.spc,R.rpc,R.s.dir,R.rib.pat,S.yarns.map(y=>[y.color,y.colorType,y.palette,y.stripeRows])]);
+  if(sig===built3D&&T3.mesh){ req3D(); return true; }
+  built3D=sig;
   const NT=72; const rings=sh.rings; const nr=rings.length;
   const pos=new Float32Array(nr*(NT+1)*3), uv=new Float32Array(nr*(NT+1)*2);
   let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
@@ -1911,7 +1948,10 @@ function build3D(){
   T3.size=Math.max(maxX-minX,maxY-minY);
   req3D(); return true;
 }
-function schedule3D(){ clearTimeout(rebuildTimer); rebuildTimer=setTimeout(()=>{ if(view==='3d'){ if(!build3D()) fallback2D(); } },140); }
+const threePending=()=>!window.THREE&&!window.threeFailed;
+window.onThreeLoad=()=>{ if(view==='3d') setView(); };
+window.onThreeError=()=>{ if(view==='3d') fallback2D(); };
+function schedule3D(){ clearTimeout(rebuildTimer); rebuildTimer=setTimeout(()=>{ if(view==='3d'&&!threePending()){ if(!build3D()) fallback2D(); } },140); }
 function fallback2D(){ view='2d'; setView(); $('#v3d').disabled=true; $('#viewNote').textContent='3D-näkymä ei ole käytettävissä tässä selaimessa; näytetään kaava.'; }
 const VIEW_HINT=window.matchMedia('(pointer: coarse)').matches?'Pyöritä sormella · nipistä zoomataksesi':'Raahaa pyörittääksesi · rulla zoomaa · tuplaklikkaus palauttaa';
 function setView(){
@@ -1920,7 +1960,9 @@ function setView(){
   $('#autoRot').closest('label').hidden=view!=='3d'; $('#resetView').hidden=view!=='3d';
   if(!$('#v3d').disabled){ $('#viewNote').textContent=VIEW_HINT; $('#viewNote').hidden=view!=='3d'; } else $('#viewNote').hidden=false;
   try{ localStorage.setItem(STORE+'-view',view); }catch(e){}
-  if(view==='2d') render2D(); else { if(!build3D()) fallback2D(); else size3D(); }
+  if(view==='2d') render2D();
+  else if(threePending()){ $('#viewNote').textContent='Ladataan 3D-näkymää…'; $('#viewNote').hidden=false; }
+  else { if(!build3D()) fallback2D(); else size3D(); }
 }
 $$('[data-view]').forEach(b=>b.addEventListener('click',()=>{ view=b.dataset.view; setView(); }));
 $('#resetView').addEventListener('click',resetCam);
